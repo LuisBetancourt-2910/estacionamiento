@@ -1,0 +1,149 @@
+.reports-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+  }
+  
+  .reports-title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  
+  .reports-filters {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+  }
+  
+  .filters-title {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+    align-items: end;
+  }
+  
+  .filters-grid label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.3rem;
+  }
+  
+  .filters-grid input[type="date"],
+  .filters-grid input[type="time"] {
+    width: 100%;
+    padding: 0.4rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .filters-button {
+    align-self: center;
+  }
+  
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 0.9rem;
+    border: none;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    gap: 0.4rem;
+  }
+  
+  .btn-search {
+    background-color: #3498db;
+    color: white;
+  }
+  
+  .btn-search:hover {
+    background-color: #2980b9;
+  }
+  
+  .btn-pdf {
+    background-color: #e74c3c;
+    color: white;
+  }
+  
+  .btn-pdf:hover {
+    background-color: #c0392b;
+  }
+  
+  .btn-excel {
+    background-color: #2ecc71;
+    color: white;
+  }
+  
+  .btn-excel:hover {
+    background-color: #27ae60;
+  }
+  
+  .icon {
+    font-size: 1rem;
+  }
+  
+  .reports-table-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+  }
+  
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .export-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .table-wrapper {
+    overflow-x: auto;
+  }
+  
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .report-table th,
+  .report-table td {
+    border: 1px solid #ddd;
+    padding: 0.6rem;
+    text-align: center;
+  }
+  
+  .report-table th {
+    background-color: #f1f1f1;
+    font-weight: bold;
+  }
+  
+  .no-records {
+    text-align: center;
+    font-style: italic;
+    padding: 1rem;
+    color: #777;
+  }
+  
+  .table-summary {
+    margin-top: 1rem;
+    text-align: right;
+    font-weight: bold;
+  }
+  
