@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import VehicleForm from '../components/VehicleForm';
+import { VehicleContext } from '../context/VehicleContext';
 import '../styles/VehicleEntry.css';
 
 const VehicleEntry = () => {
-  const [vehicles, setVehicles] = useState([]);
+  const { vehicles, addVehicle } = useContext(VehicleContext);
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
 
   const handleVehicleEntry = (vehicle) => {
@@ -21,7 +22,13 @@ const VehicleEntry = () => {
       return;
     }
 
-    setVehicles([...vehicles, vehicle]);
+    const vehicleWithTimestamp = {
+      ...vehicle,
+      entryTime: new Date().toISOString(),
+      exitTime: null,
+    };
+
+    addVehicle(vehicleWithTimestamp);
     setNotification({
       show: true,
       message: `Entrada registrada: Vehículo ${vehicle.plateNumber}`,
