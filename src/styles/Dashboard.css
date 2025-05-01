@@ -1,0 +1,192 @@
+.dashboard-container {
+    padding: 1rem;
+  }
+  
+  .dashboard-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .card {
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+  }
+  
+  .card-icon {
+    padding: 0.75rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .icon {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .card-content {
+    margin-left: 1rem;
+  }
+  
+  .label {
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  
+  .value {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+  
+  .blue-bg { background-color: #DBEAFE; color: #3B82F6; }
+  .green-bg { background-color: #D1FAE5; color: #10B981; }
+  .purple-bg { background-color: #EDE9FE; color: #8B5CF6; }
+  .red-bg { background-color: #FECACA; color: #EF4444; }
+  
+  .dashboard-sections {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .dashboard-panel {
+    background: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  
+  .panel-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+  
+  .distribution-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+  }
+  
+  .progress-bar {
+    width: 100%;
+    background-color: #E5E7EB;
+    border-radius: 9999px;
+    height: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .progress-fill {
+    height: 0.5rem;
+    border-radius: 9999px;
+  }
+  
+  .progress-fill.official { background-color: #3B82F6; }
+  .progress-fill.resident { background-color: #10B981; }
+  .progress-fill.noResident { background-color: #8B5CF6; }
+  
+  .quick-actions {
+    display: grid;
+    gap: 1rem;
+  }
+  
+  .action-link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: background 0.3s ease;
+  }
+  
+  .blue-hover:hover { background-color: #EFF6FF; }
+  .red-hover:hover { background-color: #FEE2E2; }
+  .green-hover:hover { background-color: #ECFDF5; }
+  
+  .action-icon {
+    padding: 0.5rem;
+    border-radius: 9999px;
+    color: white;
+  }
+  
+  .small-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+  
+  .action-content {
+    margin-left: 0.75rem;
+  }
+  
+  .action-title {
+    font-weight: 500;
+  }
+  
+  .action-description {
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+  
+  .last-entries ul {
+    max-height: 13rem;
+    overflow-y: auto;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .entry-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+  }
+  
+  .entry-dot {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+  }
+  
+  .entry-dot[data-type="official"] { background-color: #3B82F6; }
+  .entry-dot[data-type="resident"] { background-color: #10B981; }
+  .entry-dot[data-type="noResident"] { background-color: #8B5CF6; }
+  
+  .entry-plate {
+    font-weight: 500;
+  }
+  
+  .entry-time {
+    margin-left: auto;
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+  
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .last-update {
+    font-size: 0.875rem;
+    color: #6b7280;
+  }

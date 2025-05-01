@@ -1,11 +1,12 @@
-import React from 'react'
+import React from 'react';
+import '../styles/Navbar.css'; 
 
 const Navbar = () => {
   return (
-    <nav className="bg-blue-600 text-white p-4">
-      <h1 className="text-xl font-bold">Sistema de Estacionamiento</h1>
+    <nav className="navbar">
+      <h1>Sistema de Estacionamiento</h1>
     </nav>
-  )
+  );
 }
 
-export default Navbar
+export default Navbar;

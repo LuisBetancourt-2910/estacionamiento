@@ -1,15 +1,20 @@
-import React from 'react'
-import Navbar from '../components/Navbar'
+import React from 'react';
+
+import Sidebar from '../components/Sidebar'; 
+import '../styles/Layout.css';
 
 const Layout = ({ children }) => {
   return (
-    <>
-      <Navbar />
-      <main className="p-4">
-        {children}
-      </main>
-    </>
-  )
-}
+    <div className="layout-container">
+      <Sidebar /> 
+      <div className="layout-content">
+    
+        <main className="p-4">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+};
 
-export default Layout
+export default Layout;
