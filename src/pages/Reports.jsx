@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { FaFilePdf, FaFileExcel, FaSearch } from 'react-icons/fa';
-import { generatePDF, exportToExcel } from '../utils/reportUtils';
+import { FaFileExcel } from 'react-icons/fa';
+import * as XLSX from 'xlsx';
 import { VehicleContext } from '../context/VehicleContext';
 import '../styles/Reports.css';
 
@@ -8,40 +8,69 @@ const Reports = () => {
   const { vehicles } = useContext(VehicleContext);
 
   const [dateFilter, setDateFilter] = useState({
-    date: new Date().toISOString().split('T')[0], // Fecha actual
+    date: new Date().toLocaleDateString('en-CA'),
     startTime: '00:00',
     endTime: '23:59',
   });
 
-  useEffect(() => {
-    console.log('Vehículos disponibles:', vehicles);
-  }, [vehicles]);
+  const [filteredRecords, setFilteredRecords] = useState([]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setDateFilter((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ✅ Filtro solo por fecha (sin hora)
-  const filteredRecords = vehicles.filter((record) => {
-    if (!record.entryTime) return false; // Si no hay entrada, no se muestra
+  // Filtrado automático
+  useEffect(() => {
+    const { date, startTime, endTime } = dateFilter;
+    const filterStart = new Date(`${date}T${startTime}`);
+    const filterEnd = new Date(`${date}T${endTime}`);
 
-    // Convertir entrada a solo fecha sin hora
-    const entryDate = new Date(record.entryTime).toISOString().split('T')[0];
-    const filterDate = dateFilter.date;
+    const results = vehicles.filter((record) => {
+      if (!record.entryTime) return false;
+      const entryTime = new Date(record.entryTime);
+      return entryTime >= filterStart && entryTime <= filterEnd;
+    });
 
-    console.log('Fecha de entrada:', entryDate, 'Fecha filtrada:', filterDate);
+    setFilteredRecords(results);
+  }, [dateFilter, vehicles]);
 
-    // Comparar solo la fecha (sin la parte de la hora)
-    return entryDate === filterDate;
-  });
-
-  const handleExportPDF = () => {
-    generatePDF(filteredRecords, dateFilter);
+  const formatDuration = (entry, exit) => {
+    const diffMs = new Date(exit) - new Date(entry);
+    const totalMin = Math.floor(diffMs / 60000);
+    const hrs = Math.floor(totalMin / 60);
+    const min = totalMin % 60;
+    return `${hrs} hr${hrs !== 1 ? 's' : ''} ${min} min`;
   };
 
-  const handleExportExcel = () => {
-    exportToExcel(filteredRecords, dateFilter);
+  const exportToExcel = () => {
+    if (filteredRecords.length === 0) {
+      alert('No hay registros para exportar.');
+      return;
+    }
+
+    const excelData = filteredRecords.map((record) => ({
+      'Núm. Placa': record.plateNumber,
+      Tipo:
+        record.type === 'official'
+          ? 'Oficial'
+          : record.type === 'resident'
+          ? 'Residente'
+          : 'No Residente',
+      Entrada: new Date(record.entryTime).toLocaleString(),
+      Salida: record.exitTime ? new Date(record.exitTime).toLocaleString() : '-',
+      'Tiempo Estacionado': record.exitTime
+        ? formatDuration(record.entryTime, record.exitTime)
+        : '-',
+      'Cantidad a Pagar': record.fee ? `$${record.fee.toFixed(2)} MXN` : '-',
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Reportes');
+
+    const filename = `reporte_estacionamiento_${dateFilter.date}.xlsx`;
+    XLSX.writeFile(wb, filename);
   };
 
   return (
@@ -84,12 +113,6 @@ const Reports = () => {
               onChange={handleFilterChange}
             />
           </div>
-
-          <div className="filters-button">
-            <button className="btn btn-search">
-              <FaSearch className="icon" /> Buscar
-            </button>
-          </div>
         </div>
       </div>
 
@@ -97,10 +120,7 @@ const Reports = () => {
         <div className="table-header">
           <h3>Resultados</h3>
           <div className="export-buttons">
-            <button onClick={handleExportPDF} className="btn btn-pdf">
-              <FaFilePdf className="icon" /> PDF
-            </button>
-            <button onClick={handleExportExcel} className="btn btn-excel">
+            <button onClick={exportToExcel} className="btn btn-excel">
               <FaFileExcel className="icon" /> Excel
             </button>
           </div>
@@ -126,36 +146,24 @@ const Reports = () => {
                   </td>
                 </tr>
               ) : (
-                filteredRecords.map((record, index) => {
-                  const hasExited = !!record.exitTime;
-                  let timeText = '-';
-                  let feeText = '-';
-
-                  if (hasExited) {
-                    const timeElapsed = Math.round(
-                      (new Date(record.exitTime) - new Date(record.entryTime)) / (1000 * 60)
-                    );
-                    const hours = Math.floor(timeElapsed / 60);
-                    const minutes = timeElapsed % 60;
-                    timeText = `${hours > 0 ? `${hours} hr${hours > 1 ? 's' : ''}` : ''} ${minutes} min`;
-                    feeText = `$${record.fee.toFixed(2)} MXN`;
-                  }
-
-                  return (
-                    <tr key={index}>
-                      <td>{record.plateNumber}</td>
-                      <td>
-                        {record.type === 'official' && 'Oficial'}
-                        {record.type === 'resident' && 'Residente'}
-                        {record.type === 'noResident' && 'No Residente'}
-                      </td>
-                      <td>{new Date(record.entryTime).toLocaleString()}</td>
-                      <td>{hasExited ? new Date(record.exitTime).toLocaleString() : '-'}</td>
-                      <td>{timeText}</td>
-                      <td>{feeText}</td>
-                    </tr>
-                  );
-                })
+                filteredRecords.map((record, index) => (
+                  <tr key={index}>
+                    <td>{record.plateNumber}</td>
+                    <td>
+                      {record.type === 'official' && 'Oficial'}
+                      {record.type === 'resident' && 'Residente'}
+                      {record.type === 'noResident' && 'No Residente'}
+                    </td>
+                    <td>{new Date(record.entryTime).toLocaleString()}</td>
+                    <td>{record.exitTime ? new Date(record.exitTime).toLocaleString() : '-'}</td>
+                    <td>
+                      {record.exitTime
+                        ? formatDuration(record.entryTime, record.exitTime)
+                        : '-'}
+                    </td>
+                    <td>{record.fee ? `$${record.fee.toFixed(2)} MXN` : '-'}</td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
