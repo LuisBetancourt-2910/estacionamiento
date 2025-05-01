@@ -4,7 +4,7 @@ import '../styles/VehicleForm.css';
 const VehicleForm = ({ onSubmit, formType }) => {
   const [vehicle, setVehicle] = useState({
     plateNumber: '',
-    type: 'noResident'
+    type: 'No Residente' 
   });
 
   const handleChange = (e) => {
@@ -19,7 +19,7 @@ const VehicleForm = ({ onSubmit, formType }) => {
       entryTime: formType === 'entry' ? new Date() : null,
       exitTime: formType === 'exit' ? new Date() : null
     });
-    setVehicle({ plateNumber: '', type: 'noResident' });
+    setVehicle({ plateNumber: '', type: 'No Residente' });
   };
 
   return (
@@ -47,9 +47,9 @@ const VehicleForm = ({ onSubmit, formType }) => {
             onChange={handleChange}
             required
           >
-            <option value="official">Oficial</option>
-            <option value="resident">Residente</option>
-            <option value="noResident">No Residente</option>
+            <option value="Oficial">Oficial</option>
+            <option value="Residente">Residente</option>
+            <option value="No Residente">No Residente</option>
           </select>
         </div>
       )}

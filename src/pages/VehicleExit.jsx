@@ -1,45 +1,26 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import VehicleForm from '../components/VehicleForm';
-import { calculateFee } from '../utils/vehicleUtils';
-import { VehicleContext } from '../context/VehicleContext';
-import { VehicleContextExit } from '../context/VehicleContextExit';
+import { registrarSalida } from '../services/registroService';
 import '../styles/VehicleExit.css';
 
 const VehicleExit = () => {
-  const { vehicles } = useContext(VehicleContext);
-  const { registerVehicleExit } = useContext(VehicleContextExit);
-
   const [parkingReceipt, setParkingReceipt] = useState(null);
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
 
-  const handleVehicleExit = (vehicleData) => {
-    const vehicle = vehicles.find(
-      v => v.plateNumber === vehicleData.plateNumber && !v.exitTime
-    );
+  const handleVehicleExit = async (vehicleData) => {
+    try {
+      const receipt = await registrarSalida({
+        plateNumber: vehicleData.plateNumber,
+      });
 
-    if (!vehicle) {
+      setParkingReceipt(receipt);
+    } catch (error) {
       setNotification({
         show: true,
-        message: `No se encontró registro para ${vehicleData.plateNumber}.`,
-        type: 'error'
+        message: `Error al registrar la salida. Intente nuevamente.`,
+        type: 'error',
       });
       setTimeout(() => setNotification({ show: false, message: '', type: '' }), 3000);
-      return;
-    }
-
-    const entryTime = new Date(vehicle.entryTime);
-    const exitTime = new Date();
-    const timeElapsed = Math.max(1, Math.round((exitTime - entryTime) / (1000 * 60)));
-    const fee = calculateFee(vehicle.type, timeElapsed);
-
-    const updated = registerVehicleExit(vehicle.plateNumber, {
-      exitTime: exitTime.toISOString(),
-      timeElapsed,
-      fee
-    });
-
-    if (updated) {
-      setParkingReceipt({ ...updated, entryTime, exitTime });
     }
   };
 
@@ -78,14 +59,14 @@ const VehicleExit = () => {
                 <button onClick={handlePrintReceipt}>Imprimir</button>
               </div>
               <div className="receipt-body">
-                <div><strong>Placa:</strong> {parkingReceipt.plateNumber}</div>
-                <div><strong>Tipo:</strong> {parkingReceipt.type}</div>
-                <div><strong>Entrada:</strong> {new Date(parkingReceipt.entryTime).toLocaleString()}</div>
-                <div><strong>Salida:</strong> {new Date(parkingReceipt.exitTime).toLocaleString()}</div>
-                <div><strong>Tiempo:</strong> {parkingReceipt.timeElapsed} min</div>
+                <div><strong>Placa:</strong> {parkingReceipt?.Placa || 'N/A'}</div>
+                <div><strong>Tipo:</strong> {parkingReceipt?.Tipo || 'N/A'}</div>
+                <div><strong>Entrada:</strong> {parkingReceipt?.HoraEntrada ? new Date(parkingReceipt.HoraEntrada).toLocaleString() : 'N/A'}</div>
+                <div><strong>Salida:</strong> {parkingReceipt?.HoraSalida ? new Date(parkingReceipt.HoraSalida).toLocaleString() : 'N/A'}</div>
+                <div><strong>Tiempo:</strong> {parkingReceipt?.TiempoEstacionadoMinutos ? `${parkingReceipt.TiempoEstacionadoMinutos} min` : 'N/A'}</div>
               </div>
               <div className="receipt-total">
-                <strong>Total:</strong> ${parkingReceipt.fee.toFixed(2)} MXN
+                <strong>Total:</strong> ${parkingReceipt?.Tarifa ? parkingReceipt.Tarifa.toFixed(2) : '0.00'} MXN
               </div>
               <div className="receipt-footer">
                 ¡Gracias! Fecha: {new Date().toLocaleDateString()}

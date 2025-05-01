@@ -1,27 +1,52 @@
-import React, { useContext } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { FaCar, FaMoneyBillWave, FaClipboardList, FaArrowRight, FaArrowLeft } from 'react-icons/fa';
+import { obtenerVehiculos } from '../services/registroService';
 import { VehicleContext } from '../context/VehicleContext';
 import '../styles/Dashboard.css';
 
 const Dashboard = () => {
-  const { vehicles } = useContext(VehicleContext);
-  const activeVehicles = vehicles.filter(v => !v.exitTime);
-  const lastEntries = [...vehicles].reverse().slice(0, 5);
+  const { vehicles: contextVehicles } = useContext(VehicleContext); // Datos del contexto
+  const [vehicles, setVehicles] = useState([]); // Datos del backend
+  const [todaysRevenue, setTodaysRevenue] = useState(0);
+  const [todaysEntries, setTodaysEntries] = useState(0);
+  const [todaysExitedVehicles, setTodaysExitedVehicles] = useState(0);
 
-  const today = new Date();
-  const isToday = (dateStr) => {
-    const date = new Date(dateStr);
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
-  };
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      try {
+        const data = await obtenerVehiculos();
+        setVehicles(data);
 
-  const todaysEntries = vehicles.filter(v => isToday(v.entryTime));
-  const todaysExitedVehicles = vehicles.filter(v => v.exitTime && isToday(v.exitTime));
-  const todaysRevenue = todaysExitedVehicles.reduce((total, v) => total + (v.fee || 0), 0);
+        // Calcular estadísticas
+        const today = new Date();
+        const isToday = (dateStr) => {
+          const date = new Date(dateStr);
+          return (
+            date.getDate() === today.getDate() &&
+            date.getMonth() === today.getMonth() &&
+            date.getFullYear() === today.getFullYear()
+          );
+        };
+
+        const entriesToday = data.filter(v => isToday(v.HoraEntrada));
+        const exitsToday = data.filter(v => v.HoraSalida && isToday(v.HoraSalida));
+        const revenueToday = exitsToday.reduce((total, v) => total + (v.Tarifa || 0), 0);
+
+        setTodaysEntries(entriesToday.length);
+        setTodaysExitedVehicles(exitsToday.length);
+        setTodaysRevenue(revenueToday);
+      } catch (error) {
+        console.error('Error al obtener los vehículos:', error);
+      }
+    };
+
+    fetchVehicles();
+  }, []);
+
+  // Combinar datos del contexto y del backend
+  const activeVehicles = vehicles.filter(v => !v.HoraSalida);
+  const lastEntries = [...contextVehicles].reverse().slice(0, 5);
 
   const typeCounts = {
     official: 0,
@@ -30,7 +55,7 @@ const Dashboard = () => {
   };
 
   activeVehicles.forEach(vehicle => {
-    typeCounts[vehicle.type] = (typeCounts[vehicle.type] || 0) + 1;
+    typeCounts[vehicle.Tipo] = (typeCounts[vehicle.Tipo] || 0) + 1;
   });
 
   const totalActive = activeVehicles.length;
@@ -72,7 +97,7 @@ const Dashboard = () => {
           </div>
           <div className="card-content">
             <p className="label">Entradas Hoy</p>
-            <p className="value">{todaysEntries.length}</p>
+            <p className="value">{todaysEntries}</p>
           </div>
         </div>
 
@@ -82,7 +107,7 @@ const Dashboard = () => {
           </div>
           <div className="card-content">
             <p className="label">Salidas Hoy</p>
-            <p className="value">{todaysExitedVehicles.length}</p>
+            <p className="value">{todaysExitedVehicles}</p>
           </div>
         </div>
       </div>
@@ -173,7 +198,7 @@ const Dashboard = () => {
           <ul>
             {activeVehicles.map((v, i) => (
               <li key={i}>
-                {v.plateNumber} - {typeTranslations[v.type] || v.type}
+                {v.Placa} - {typeTranslations[v.Tipo] || v.Tipo}
               </li>
             ))}
           </ul>

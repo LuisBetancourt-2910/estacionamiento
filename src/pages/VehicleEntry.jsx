@@ -1,40 +1,32 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import VehicleForm from '../components/VehicleForm';
-import { VehicleContext } from '../context/VehicleContext';
+import { registrarEntrada } from '../services/registroService';
 import '../styles/VehicleEntry.css';
 
 const VehicleEntry = () => {
-  const { vehicles, addVehicle } = useContext(VehicleContext);
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
 
-  const handleVehicleEntry = (vehicle) => {
-    const isVehicleInParking = vehicles.some(v =>
-      v.plateNumber === vehicle.plateNumber && !v.exitTime
-    );
+  const handleVehicleEntry = async (vehicle) => {
+    try {
+      await registrarEntrada({
+        plateNumber: vehicle.plateNumber,
+        type: vehicle.type,
+      });
 
-    if (isVehicleInParking) {
       setNotification({
         show: true,
-        message: `El vehículo con placa ${vehicle.plateNumber} ya está en el estacionamiento.`,
-        type: 'error'
+        message: `Entrada registrada: Vehículo ${vehicle.plateNumber}`,
+        type: 'success',
       });
+    } catch (error) {
+      setNotification({
+        show: true,
+        message: 'Error al registrar la entrada. Intente nuevamente.',
+        type: 'error',
+      });
+    } finally {
       setTimeout(() => setNotification({ show: false, message: '', type: '' }), 3000);
-      return;
     }
-
-    const vehicleWithTimestamp = {
-      ...vehicle,
-      entryTime: new Date().toISOString(),
-      exitTime: null,
-    };
-
-    addVehicle(vehicleWithTimestamp);
-    setNotification({
-      show: true,
-      message: `Entrada registrada: Vehículo ${vehicle.plateNumber}`,
-      type: 'success'
-    });
-    setTimeout(() => setNotification({ show: false, message: '', type: '' }), 3000);
   };
 
   return (
