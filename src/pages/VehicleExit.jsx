@@ -1,19 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import VehicleForm from '../components/VehicleForm';
 import { calculateFee } from '../utils/vehicleUtils';
+import { VehicleContext } from '../context/VehicleContext';
+import { VehicleContextExit } from '../context/VehicleContextExit';
 import '../styles/VehicleExit.css';
 
 const VehicleExit = () => {
-  const [vehicles, setVehicles] = useState([]);
+  const { vehicles } = useContext(VehicleContext);
+  const { registerVehicleExit } = useContext(VehicleContextExit);
+
   const [parkingReceipt, setParkingReceipt] = useState(null);
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
 
   const handleVehicleExit = (vehicleData) => {
-    const vehicleIndex = vehicles.findIndex(v =>
-      v.plateNumber === vehicleData.plateNumber && !v.exitTime
+    const vehicle = vehicles.find(
+      v => v.plateNumber === vehicleData.plateNumber && !v.exitTime
     );
 
-    if (vehicleIndex === -1) {
+    if (!vehicle) {
       setNotification({
         show: true,
         message: `No se encontró registro para ${vehicleData.plateNumber}.`,
@@ -23,17 +27,20 @@ const VehicleExit = () => {
       return;
     }
 
-    const vehicle = vehicles[vehicleIndex];
     const entryTime = new Date(vehicle.entryTime);
     const exitTime = new Date();
-    const timeElapsed = Math.round((exitTime - entryTime) / (1000 * 60));
+    const timeElapsed = Math.max(1, Math.round((exitTime - entryTime) / (1000 * 60)));
     const fee = calculateFee(vehicle.type, timeElapsed);
 
-    const updatedVehicles = [...vehicles];
-    updatedVehicles[vehicleIndex] = { ...vehicle, exitTime, timeElapsed, fee };
-    setVehicles(updatedVehicles);
+    const updated = registerVehicleExit(vehicle.plateNumber, {
+      exitTime: exitTime.toISOString(),
+      timeElapsed,
+      fee
+    });
 
-    setParkingReceipt({ ...vehicle, entryTime, exitTime, timeElapsed, fee });
+    if (updated) {
+      setParkingReceipt({ ...updated, entryTime, exitTime });
+    }
   };
 
   const handlePrintReceipt = () => window.print();
@@ -73,8 +80,8 @@ const VehicleExit = () => {
               <div className="receipt-body">
                 <div><strong>Placa:</strong> {parkingReceipt.plateNumber}</div>
                 <div><strong>Tipo:</strong> {parkingReceipt.type}</div>
-                <div><strong>Entrada:</strong> {parkingReceipt.entryTime.toLocaleString()}</div>
-                <div><strong>Salida:</strong> {parkingReceipt.exitTime.toLocaleString()}</div>
+                <div><strong>Entrada:</strong> {new Date(parkingReceipt.entryTime).toLocaleString()}</div>
+                <div><strong>Salida:</strong> {new Date(parkingReceipt.exitTime).toLocaleString()}</div>
                 <div><strong>Tiempo:</strong> {parkingReceipt.timeElapsed} min</div>
               </div>
               <div className="receipt-total">

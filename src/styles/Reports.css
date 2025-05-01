@@ -66,6 +66,7 @@
   .btn-search {
     background-color: #3498db;
     color: white;
+    margin-left: 105px;
   }
   
   .btn-search:hover {

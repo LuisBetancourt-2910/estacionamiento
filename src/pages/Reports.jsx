@@ -1,65 +1,40 @@
-import React, { useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { FaFilePdf, FaFileExcel, FaSearch } from 'react-icons/fa';
 import { generatePDF, exportToExcel } from '../utils/reportUtils';
+import { VehicleContext } from '../context/VehicleContext';
 import '../styles/Reports.css';
 
 const Reports = () => {
+  const { vehicles } = useContext(VehicleContext);
+
   const [dateFilter, setDateFilter] = useState({
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().split('T')[0], // Fecha actual
     startTime: '00:00',
-    endTime: '23:59'
+    endTime: '23:59',
   });
 
-  const [parkingRecords] = useState([
-    {
-      id: 1,
-      plateNumber: 'S1234A',
-      type: 'resident',
-      entryTime: new Date('2025-04-30T13:00:00'),
-      exitTime: new Date('2025-04-30T13:30:00'),
-      fee: 30.0
-    },
-    {
-      id: 2,
-      plateNumber: '4567ABC',
-      type: 'noResident',
-      entryTime: new Date('2025-04-30T14:00:00'),
-      exitTime: new Date('2025-04-30T15:00:00'),
-      fee: 180.0
-    },
-    {
-      id: 3,
-      plateNumber: '4FRU573',
-      type: 'official',
-      entryTime: new Date('2025-04-30T10:00:00'),
-      exitTime: new Date('2025-04-30T15:00:00'),
-      fee: 0.0
-    }
-  ]);
+  useEffect(() => {
+    console.log('Vehículos disponibles:', vehicles);
+  }, [vehicles]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setDateFilter((prev) => ({ ...prev, [name]: value }));
   };
 
-  const filterRecords = () => {
-    const filterDate = new Date(dateFilter.date);
-    const filterStartTime = new Date(`${dateFilter.date}T${dateFilter.startTime}:00`);
-    const filterEndTime = new Date(`${dateFilter.date}T${dateFilter.endTime}:00`);
+  // ✅ Filtro solo por fecha (sin hora)
+  const filteredRecords = vehicles.filter((record) => {
+    if (!record.entryTime) return false; // Si no hay entrada, no se muestra
 
-    return parkingRecords.filter((record) => {
-      const recordDate = new Date(record.entryTime);
-      return (
-        recordDate.getDate() === filterDate.getDate() &&
-        recordDate.getMonth() === filterDate.getMonth() &&
-        recordDate.getFullYear() === filterDate.getFullYear() &&
-        recordDate >= filterStartTime &&
-        recordDate <= filterEndTime
-      );
-    });
-  };
+    // Convertir entrada a solo fecha sin hora
+    const entryDate = new Date(record.entryTime).toISOString().split('T')[0];
+    const filterDate = dateFilter.date;
 
-  const filteredRecords = filterRecords();
+    console.log('Fecha de entrada:', entryDate, 'Fecha filtrada:', filterDate);
+
+    // Comparar solo la fecha (sin la parte de la hora)
+    return entryDate === filterDate;
+  });
 
   const handleExportPDF = () => {
     generatePDF(filteredRecords, dateFilter);
@@ -151,13 +126,23 @@ const Reports = () => {
                   </td>
                 </tr>
               ) : (
-                filteredRecords.map((record) => {
-                  const timeElapsed = Math.round((new Date(record.exitTime) - new Date(record.entryTime)) / (1000 * 60));
-                  const hours = Math.floor(timeElapsed / 60);
-                  const minutes = timeElapsed % 60;
+                filteredRecords.map((record, index) => {
+                  const hasExited = !!record.exitTime;
+                  let timeText = '-';
+                  let feeText = '-';
+
+                  if (hasExited) {
+                    const timeElapsed = Math.round(
+                      (new Date(record.exitTime) - new Date(record.entryTime)) / (1000 * 60)
+                    );
+                    const hours = Math.floor(timeElapsed / 60);
+                    const minutes = timeElapsed % 60;
+                    timeText = `${hours > 0 ? `${hours} hr${hours > 1 ? 's' : ''}` : ''} ${minutes} min`;
+                    feeText = `$${record.fee.toFixed(2)} MXN`;
+                  }
 
                   return (
-                    <tr key={record.id}>
+                    <tr key={index}>
                       <td>{record.plateNumber}</td>
                       <td>
                         {record.type === 'official' && 'Oficial'}
@@ -165,11 +150,9 @@ const Reports = () => {
                         {record.type === 'noResident' && 'No Residente'}
                       </td>
                       <td>{new Date(record.entryTime).toLocaleString()}</td>
-                      <td>{new Date(record.exitTime).toLocaleString()}</td>
-                      <td>
-                        {hours > 0 ? `${hours} hr${hours > 1 ? 's' : ''}` : ''} {minutes} min
-                      </td>
-                      <td>${record.fee.toFixed(2)} MXN</td>
+                      <td>{hasExited ? new Date(record.exitTime).toLocaleString() : '-'}</td>
+                      <td>{timeText}</td>
+                      <td>{feeText}</td>
                     </tr>
                   );
                 })

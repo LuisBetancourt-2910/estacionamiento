@@ -1,63 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { FaCar, FaMoneyBillWave, FaClipboardList, FaArrowRight, FaArrowLeft } from 'react-icons/fa';
-import VehicleList from '../components/VehicleList';
-import '../styles/Dashboard.css'; 
+import { VehicleContext } from '../context/VehicleContext';
+import '../styles/Dashboard.css';
 
 const Dashboard = () => {
-  const [stats, setStats] = useState({
-    activeVehicles: 0,
-    totalEntries: 0,
-    dailyRevenue: 0,
-    vehicleTypes: {
-      official: 0,
-      resident: 0,
-      noResident: 0
-    }
+  const { vehicles } = useContext(VehicleContext);
+  const activeVehicles = vehicles.filter(v => !v.exitTime);
+  const lastEntries = [...vehicles].reverse().slice(0, 5);
+
+  const today = new Date();
+  const isToday = (dateStr) => {
+    const date = new Date(dateStr);
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  };
+
+  const todaysEntries = vehicles.filter(v => isToday(v.entryTime));
+  const todaysExitedVehicles = vehicles.filter(v => v.exitTime && isToday(v.exitTime));
+  const todaysRevenue = todaysExitedVehicles.reduce((total, v) => total + (v.fee || 0), 0);
+
+  const typeCounts = {
+    official: 0,
+    resident: 0,
+    noResident: 0,
+  };
+
+  activeVehicles.forEach(vehicle => {
+    typeCounts[vehicle.type] = (typeCounts[vehicle.type] || 0) + 1;
   });
 
-  const [activeVehicles, setActiveVehicles] = useState([
-    { plateNumber: 'S1234A', type: 'resident', entryTime: new Date(new Date().getTime() - 30 * 60000) },
-    { plateNumber: '4567ABC', type: 'noResident', entryTime: new Date(new Date().getTime() - 45 * 60000) },
-    { plateNumber: '4FRU573', type: 'official', entryTime: new Date(new Date().getTime() - 180 * 60000) }
-  ]);
+  const totalActive = activeVehicles.length;
 
-  useEffect(() => {
-    setStats({
-      activeVehicles: activeVehicles.length,
-      totalEntries: 15,
-      dailyRevenue: 1450.00,
-      vehicleTypes: {
-        official: 2,
-        resident: 5,
-        noResident: 8
-      }
-    });
-  }, [activeVehicles]);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const randomAction = Math.random();
-      if (randomAction > 0.7 && activeVehicles.length > 0) {
-        const randomIndex = Math.floor(Math.random() * activeVehicles.length);
-        const newActiveVehicles = [...activeVehicles];
-        newActiveVehicles.splice(randomIndex, 1);
-        setActiveVehicles(newActiveVehicles);
-      } else if (randomAction < 0.3) {
-        const types = ['official', 'resident', 'noResident'];
-        const randomType = types[Math.floor(Math.random() * types.length)];
-        const newPlate = `ABC${Math.floor(Math.random() * 1000)}`;
-
-        setActiveVehicles([...activeVehicles, {
-          plateNumber: newPlate,
-          type: randomType,
-          entryTime: new Date()
-        }]);
-      }
-    }, 10000);
-
-    return () => clearInterval(timer);
-  }, [activeVehicles]);
+  const typeTranslations = {
+    official: 'Oficial',
+    resident: 'Residente',
+    noResident: 'No Residente',
+  };
 
   return (
     <div className="dashboard-container">
@@ -70,7 +52,7 @@ const Dashboard = () => {
           </div>
           <div className="card-content">
             <p className="label">Vehículos Activos</p>
-            <p className="value">{stats.activeVehicles}</p>
+            <p className="value">{totalActive}</p>
           </div>
         </div>
 
@@ -80,7 +62,7 @@ const Dashboard = () => {
           </div>
           <div className="card-content">
             <p className="label">Ingresos Hoy</p>
-            <p className="value">${stats.dailyRevenue.toFixed(2)}</p>
+            <p className="value">${todaysRevenue.toFixed(2)}</p>
           </div>
         </div>
 
@@ -90,7 +72,7 @@ const Dashboard = () => {
           </div>
           <div className="card-content">
             <p className="label">Entradas Hoy</p>
-            <p className="value">{stats.totalEntries}</p>
+            <p className="value">{todaysEntries.length}</p>
           </div>
         </div>
 
@@ -100,7 +82,7 @@ const Dashboard = () => {
           </div>
           <div className="card-content">
             <p className="label">Salidas Hoy</p>
-            <p className="value">{stats.totalEntries - stats.activeVehicles}</p>
+            <p className="value">{todaysExitedVehicles.length}</p>
           </div>
         </div>
       </div>
@@ -109,20 +91,21 @@ const Dashboard = () => {
         <div className="dashboard-panel">
           <h3 className="panel-title">Distribución por Tipo</h3>
           <div className="distribution">
-            {['official', 'resident', 'noResident'].map((type, index) => (
-              <div key={index}>
-                <div className="distribution-row">
-                  <span>{type === 'official' ? 'Oficiales' : type === 'resident' ? 'Residentes' : 'No Residentes'}</span>
-                  <span>{stats.vehicleTypes[type]}</span>
+            {['official', 'resident', 'noResident'].map((type, index) => {
+              const label = typeTranslations[type];
+              const percent = totalActive ? (typeCounts[type] / totalActive) * 100 : 0;
+              return (
+                <div key={index}>
+                  <div className="distribution-row">
+                    <span>{label}</span>
+                    <span>{typeCounts[type]}</span>
+                  </div>
+                  <div className="progress-bar">
+                    <div className={`progress-fill ${type}`} style={{ width: `${percent}%` }}></div>
+                  </div>
                 </div>
-                <div className="progress-bar">
-                  <div
-                    className={`progress-fill ${type}`}
-                    style={{ width: `${(stats.vehicleTypes[type] / stats.totalEntries) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -159,13 +142,21 @@ const Dashboard = () => {
           <h3 className="panel-title">Últimas Entradas</h3>
           <div className="last-entries">
             <ul>
-              {activeVehicles.slice(0, 5).map((vehicle, index) => (
-                <li key={index} className="entry-item">
-                  <div className="entry-dot" data-type={vehicle.type}></div>
-                  <span className="entry-plate">{vehicle.plateNumber}</span>
-                  <span className="entry-time">{new Date(vehicle.entryTime).toLocaleTimeString()}</span>
+              {lastEntries.length === 0 ? (
+                <li className="entry-item">
+                  <div className="entry-dot"></div>
+                  <span className="entry-plate">-</span>
+                  <span className="entry-time">-</span>
                 </li>
-              ))}
+              ) : (
+                lastEntries.map((v, i) => (
+                  <li key={i} className="entry-item">
+                    <div className="entry-dot"></div>
+                    <span className="entry-plate">{v.plateNumber}</span>
+                    <span className="entry-time">{new Date(v.entryTime).toLocaleTimeString()}</span>
+                  </li>
+                ))
+              )}
             </ul>
           </div>
         </div>
@@ -176,7 +167,17 @@ const Dashboard = () => {
           <h3 className="panel-title">Vehículos en Estacionamiento</h3>
           <span className="last-update">Actualizado: {new Date().toLocaleTimeString()}</span>
         </div>
-        <VehicleList vehicles={activeVehicles} />
+        {activeVehicles.length === 0 ? (
+          <div className="vehicle-list-placeholder">Sin datos disponibles</div>
+        ) : (
+          <ul>
+            {activeVehicles.map((v, i) => (
+              <li key={i}>
+                {v.plateNumber} - {typeTranslations[v.type] || v.type}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
