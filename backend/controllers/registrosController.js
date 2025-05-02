@@ -109,3 +109,23 @@ export const obtenerVehiculos = async (req, res) => {
         res.status(500).send('Error al obtener los registros');
     }
 };
+
+export const obtenerTarifasDelDia = async (req, res) => {
+    try {
+        const pool = await poolPromise;
+
+        // Sumar las tarifas del día actual ajustando la zona horaria
+        const result = await pool.request()
+            .query(`
+                SELECT COALESCE(SUM(Tarifa), 0) AS TotalTarifas
+                FROM Registros
+                WHERE CAST(SWITCHOFFSET(HoraSalida, '-06:00') AS DATE) = CAST(GETDATE() AS DATE);
+            `);
+
+        const totalTarifas = result.recordset[0].TotalTarifas; // Obtener el total
+        res.json({ totalTarifas }); // Enviar el total al frontend
+    } catch (err) {
+        console.error('Error al obtener las tarifas del día:', err);
+        res.status(500).send('Error al obtener las tarifas del día');
+    }
+};

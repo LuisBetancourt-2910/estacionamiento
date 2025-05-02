@@ -17,3 +17,8 @@ export const obtenerVehiculos = async () => {
     return response.data;
 };
 
+export const obtenerTarifasDelDia = async () => {
+    const response = await axios.get(`${API_URL}/tarifas-dia`);
+    return response.data;
+};
+

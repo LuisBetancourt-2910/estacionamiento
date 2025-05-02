@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { FaCar, FaMoneyBillWave, FaClipboardList, FaArrowRight, FaArrowLeft } from 'react-icons/fa';
-import { obtenerVehiculos } from '../services/registroService';
+import { obtenerVehiculos, obtenerTarifasDelDia } from '../services/registroService';
 import { VehicleContext } from '../context/VehicleContext';
 import '../styles/Dashboard.css';
 
@@ -31,27 +31,37 @@ const Dashboard = () => {
 
         const entriesToday = data.filter(v => isToday(v.HoraEntrada));
         const exitsToday = data.filter(v => v.HoraSalida && isToday(v.HoraSalida));
-        const revenueToday = exitsToday.reduce((total, v) => total + (v.Tarifa || 0), 0);
-
         setTodaysEntries(entriesToday.length);
         setTodaysExitedVehicles(exitsToday.length);
-        setTodaysRevenue(revenueToday);
       } catch (error) {
         console.error('Error al obtener los vehículos:', error);
       }
     };
 
+    const fetchTodaysRevenue = async () => {
+      try {
+        const { totalTarifas } = await obtenerTarifasDelDia();
+        setTodaysRevenue(totalTarifas);
+      } catch (error) {
+        console.error('Error al obtener las tarifas del día:', error);
+      }
+    };
+
     fetchVehicles();
+    fetchTodaysRevenue();
   }, []);
 
-  // Combinar datos del contexto y del backend
+  // Vehículos activos (sin HoraSalida)
   const activeVehicles = vehicles.filter(v => !v.HoraSalida);
+
+  // Últimas entradas desde el contexto
   const lastEntries = [...contextVehicles].reverse().slice(0, 5);
 
+  // Contar tipos de vehículos activos
   const typeCounts = {
-    official: 0,
-    resident: 0,
-    noResident: 0,
+    Oficial: 0,
+    Residente: 0,
+    'No Residente': 0,
   };
 
   activeVehicles.forEach(vehicle => {
@@ -59,12 +69,6 @@ const Dashboard = () => {
   });
 
   const totalActive = activeVehicles.length;
-
-  const typeTranslations = {
-    official: 'Oficial',
-    resident: 'Residente',
-    noResident: 'No Residente',
-  };
 
   return (
     <div className="dashboard-container">
@@ -116,13 +120,12 @@ const Dashboard = () => {
         <div className="dashboard-panel">
           <h3 className="panel-title">Distribución por Tipo</h3>
           <div className="distribution">
-            {['official', 'resident', 'noResident'].map((type, index) => {
-              const label = typeTranslations[type];
+            {Object.keys(typeCounts).map((type, index) => {
               const percent = totalActive ? (typeCounts[type] / totalActive) * 100 : 0;
               return (
                 <div key={index}>
                   <div className="distribution-row">
-                    <span>{label}</span>
+                    <span>{type}</span>
                     <span>{typeCounts[type]}</span>
                   </div>
                   <div className="progress-bar">
@@ -198,7 +201,7 @@ const Dashboard = () => {
           <ul>
             {activeVehicles.map((v, i) => (
               <li key={i}>
-                {v.Placa} - {typeTranslations[v.Tipo] || v.Tipo}
+                {v.Placa} - {v.Tipo}
               </li>
             ))}
           </ul>
