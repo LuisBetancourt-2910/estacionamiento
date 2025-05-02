@@ -11,3 +11,8 @@ export const obtenerUsuarios = async () => {
   const response = await axios.get('http://localhost:3000/api/auth/users');
   return response.data;
 };
+
+export const eliminarUsuario = async (username) => {
+  const response = await axios.delete(`${API_URL}/register/${username}`);
+  return response.data;
+};

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaSave, FaCog, FaPlus, FaTrash } from 'react-icons/fa';
 import '../styles/Settings.css';
 import { obtenerTarifas, guardarTarifa, eliminarTarifa } from '../services/tarifaService';
-import { registrarUsuario, obtenerUsuarios } from '../services/usuarioService';
+import { registrarUsuario, obtenerUsuarios, eliminarUsuario } from '../services/usuarioService';
 
 const Settings = () => {
   const [settings, setSettings] = useState({
@@ -181,9 +181,15 @@ const Settings = () => {
   };
   
   // Eliminar un usuario
-  const handleDeleteUser = (username) => {
-    setUsers((prev) => prev.filter((user) => user.username !== username));
-    alert('Usuario eliminado correctamente.');
+  const handleDeleteUser = async (username) => {
+    try {
+      await eliminarUsuario(username);
+      setUsers((prev) => prev.filter((user) => user.username !== username));
+      alert('Usuario eliminado correctamente.');
+    } catch (error) {
+      console.error('Error al eliminar el usuario:', error);
+      alert('No se pudo eliminar el usuario. Intenta nuevamente.');
+    }
   };
 
   const handleSubmit = (e) => {

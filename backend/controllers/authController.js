@@ -88,3 +88,28 @@ export const obtenerUsuarios = async (req, res) => {
   }
 };
 
+// Eliminar un usuario por username
+export const eliminarUsuario = async (req, res) => {
+  const { username } = req.params;
+
+  if (!username) {
+    return res.status(400).json({ error: 'Se requiere el nombre de usuario' });
+  }
+
+  try {
+    const pool = await getPool();
+
+    const result = await pool.request()
+      .input('username', sql.NVarChar, username)
+      .query('DELETE FROM Usuarios WHERE username = @username');
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    res.status(200).json({ message: 'Usuario eliminado correctamente' });
+  } catch (error) {
+    console.error('Error al eliminar usuario:', error);
+    res.status(500).json({ error: 'Error al eliminar el usuario en la base de datos' });
+  }
+};
