@@ -13,7 +13,6 @@ const Dashboard = () => {
   const [todaysExitedVehicles, setTodaysExitedVehicles] = useState(0);
   const [tiposTarifa, setTiposTarifa] = useState([]);
   
-  // Sistema de clases de colores del segundo archivo
   const colorClasses = ['fill-blue', 'fill-green', 'fill-purple', 'fill-red', 'fill-yellow', 'fill-pink'];
 
   useEffect(() => {
@@ -141,7 +140,6 @@ const Dashboard = () => {
             {tiposTarifa.map((type, index) => {
               const count = typeCounts[type];
               const percent = totalActive ? (count / totalActive) * 100 : 0;
-              // Usa el sistema de clases de colores del segundo archivo
               const progressClass = colorClasses[index % colorClasses.length];
               
               return (
