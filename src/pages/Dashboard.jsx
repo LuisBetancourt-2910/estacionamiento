@@ -129,7 +129,7 @@ const Dashboard = () => {
                     <span>{typeCounts[type]}</span>
                   </div>
                   <div className="progress-bar">
-                    <div className={`progress-fill ${type}`} style={{ width: `${percent}%` }}></div>
+                  <div className={`progress-fill ${type.replace(' ', '')}`} style={{ width: `${percent}%` }}></div>
                   </div>
                 </div>
               );
