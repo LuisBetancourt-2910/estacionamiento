@@ -1,94 +1,145 @@
 /* src/styles/Settings.css */
 
 .settings-container {
-    padding: 1.5rem;
-  }
-  
-  .settings-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-  }
-  
+  padding: 1.5rem;
+}
+
+.settings-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.settings-form {
+  display: grid;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  grid-template-columns: 1fr;
+}
+
+.settings-card {
+  background-color: #fff;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.settings-card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.settings-card-title svg {
+  margin-right: 0.5rem;
+}
+
+.settings-input,
+.settings-select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid #cbd5e0;
+  color: #4a5568;
+  outline: none;
+  margin-bottom: 0.75rem;
+}
+
+.settings-input:focus,
+.settings-select:focus {
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+}
+
+.settings-checkbox-label {
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+  color: #4a5568;
+}
+
+.settings-note {
+  font-size: 0.875rem;
+  color: #718096;
+  margin-top: 0.5rem;
+}
+
+.settings-add-button,
+.settings-delete-button,
+.settings-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  margin-top: 0.75rem;
+}
+
+
+.settings-add-button {
+  background-color: #10b981; 
+  color: white;
+  width: 100%;
+}
+
+.settings-add-button:hover {
+  background-color: #059669;
+}
+
+.settings-delete-button {
+  background-color: #ef4444; 
+  color: white;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  margin-left: auto;
+}
+
+.settings-delete-button:hover {
+  background-color: #dc2626;
+}
+
+.settings-submit {
+  background-color: #3b82f6; 
+  color: white;
+  font-weight: bold;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+}
+
+.settings-submit:hover {
+  background-color: #2563eb;
+}
+
+.settings-add-button svg,
+.settings-delete-button svg,
+.settings-submit svg {
+  margin-right: 0.5rem;
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.settings-item:last-child {
+  border-bottom: none;
+}
+
+@media (min-width: 768px) {
   .settings-form {
-    display: grid;
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
-  
-  .settings-card {
-    background-color: #fff;
-    border-radius: 0.5rem;
-    padding: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 1024px) {
+  .settings-form {
+    grid-template-columns: repeat(3, 1fr);
   }
-  
-  .settings-card-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-  }
-  
-  .settings-card-title svg {
-    margin-right: 0.5rem;
-  }
-  
-  .settings-input,
-  .settings-select {
-    width: 100%;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.375rem;
-    border: 1px solid #cbd5e0;
-    color: #4a5568;
-    outline: none;
-  }
-  
-  .settings-input:focus,
-  .settings-select:focus {
-    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
-  }
-  
-  .settings-checkbox-label {
-    margin-left: 0.5rem;
-    font-size: 0.875rem;
-    color: #4a5568;
-  }
-  
-  .settings-note {
-    font-size: 0.875rem;
-    color: #718096;
-    margin-top: 0.5rem;
-  }
-  
-  .settings-submit {
-    background-color: #3b82f6;
-    color: white;
-    font-weight: bold;
-    padding: 0.5rem 1rem;
-    border-radius: 0.375rem;
-    display: flex;
-    align-items: center;
-  }
-  
-  .settings-submit:hover {
-    background-color: #2563eb;
-  }
-  
-  .settings-submit svg {
-    margin-right: 0.5rem;
-  }
-  
-  @media (min-width: 768px) {
-    .settings-form {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-  
-  @media (min-width: 1024px) {
-    .settings-form {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
+}
