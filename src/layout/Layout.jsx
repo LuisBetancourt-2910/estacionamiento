@@ -1,18 +1,16 @@
 import React from 'react';
-
-import Sidebar from '../components/Sidebar'; 
+import Sidebar from '../components/Sidebar';
+import Footer from '../components/Footer';
 import '../styles/Layout.css';
 
 const Layout = ({ children }) => {
   return (
     <div className="layout-container">
-      <Sidebar /> 
-      <div className="layout-content">
-    
-        <main className="p-4">
-          {children}
-        </main>
-      </div>
+      <Sidebar />
+      <main className="main-content">
+        {children}
+        <Footer />
+      </main>
     </div>
   );
 };
