@@ -26,3 +26,10 @@ export const obtenerSalidasDelDia = async () => {
     const response = await axios.get(`${API_URL}/salidas-dia`);
     return response.data;
 };
+
+export const obtenerTarifas = async () => {
+    const response = await axios.get('http://localhost:3000/api/tarifas');
+    return response.data;
+};
+
+  

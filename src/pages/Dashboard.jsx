@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { FaCar, FaMoneyBillWave, FaClipboardList, FaArrowRight, FaArrowLeft } from 'react-icons/fa';
-import { obtenerVehiculos, obtenerTarifasDelDia, obtenerSalidasDelDia } from '../services/registroService';
+import { obtenerVehiculos, obtenerTarifasDelDia, obtenerSalidasDelDia, obtenerTarifas } from '../services/registroService';
 import { VehicleContext } from '../context/VehicleContext';
 import '../styles/Dashboard.css';
 
@@ -11,6 +11,9 @@ const Dashboard = () => {
   const [todaysRevenue, setTodaysRevenue] = useState(0);
   const [todaysEntries, setTodaysEntries] = useState(0);
   const [todaysExitedVehicles, setTodaysExitedVehicles] = useState(0);
+  const [tiposTarifa, setTiposTarifa] = useState([]);
+  
+  const colorClasses = ['fill-blue', 'fill-green', 'fill-purple', 'fill-red', 'fill-yellow', 'fill-pink'];
 
   useEffect(() => {
     const fetchVehicles = async () => {
@@ -53,21 +56,33 @@ const Dashboard = () => {
       }
     };
 
+    const fetchTiposTarifa = async () => {
+      try {
+        const tarifas = await obtenerTarifas();
+        const tipos = tarifas.map(t => t.Tipo);
+        setTiposTarifa(tipos);
+      } catch (error) {
+        console.error('Error al obtener tipos de tarifa:', error);
+      }
+    };
+
     fetchVehicles();
     fetchTodaysRevenue();
     fetchTodaysExits();
+    fetchTiposTarifa();
   }, []);
 
   const activeVehicles = vehicles.filter(v => !v.HoraSalida);
 
-  const typeCounts = {
-    Oficial: 0,
-    Residente: 0,
-    'No Residente': 0,
-  };
+  const typeCounts = tiposTarifa.reduce((acc, tipo) => {
+    acc[tipo] = 0;
+    return acc;
+  }, {});
 
   activeVehicles.forEach(vehicle => {
-    typeCounts[vehicle.Tipo] = (typeCounts[vehicle.Tipo] || 0) + 1;
+    if (typeCounts.hasOwnProperty(vehicle.Tipo)) {
+      typeCounts[vehicle.Tipo]++;
+    }
   });
 
   const totalActive = activeVehicles.length;
@@ -122,16 +137,22 @@ const Dashboard = () => {
         <div className="dashboard-panel">
           <h3 className="panel-title">Distribución por Tipo</h3>
           <div className="distribution">
-            {Object.keys(typeCounts).map((type, index) => {
-              const percent = totalActive ? (typeCounts[type] / totalActive) * 100 : 0;
+            {tiposTarifa.map((type, index) => {
+              const count = typeCounts[type];
+              const percent = totalActive ? (count / totalActive) * 100 : 0;
+              const progressClass = colorClasses[index % colorClasses.length];
+              
               return (
                 <div key={index}>
                   <div className="distribution-row">
                     <span>{type}</span>
-                    <span>{typeCounts[type]}</span>
+                    <span>{count}</span>
                   </div>
                   <div className="progress-bar">
-                    <div className={`progress-fill ${type.replace(' ', '')}`} style={{ width: `${percent}%` }}></div>
+                    <div
+                      className={`progress-fill ${progressClass}`}
+                      style={{ width: `${percent}%` }}
+                    ></div>
                   </div>
                 </div>
               );
