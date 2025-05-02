@@ -5,6 +5,7 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    margin-left: -10px;
   }
   
   .sidebar-header {
@@ -55,3 +56,23 @@
   .sidebar-footer-text {
     font-size: 0.875rem;
   }
+  
+  .logout-button {
+    background: none;
+    border: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    padding: 0.75rem 1rem;
+    width: 100%;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .logout-button:hover {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+  

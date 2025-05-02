@@ -44,7 +44,6 @@ export const loginUsuario = async (req, res) => {
 
   try {
     const pool = await getPool();
-
     const result = await pool.request()
       .input('username', sql.NVarChar, username)
       .query('SELECT * FROM Usuarios WHERE username = @username');

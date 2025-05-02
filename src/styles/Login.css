@@ -1,0 +1,83 @@
+/* Variables básicas */
+:root {
+    --primary-color: #3B82F6;
+    --error-color: #EF4444;
+    --background-color: #F3F4F6;
+    --text-color: #1F2937;
+    --white: #FFFFFF;
+    --border-radius: 6px;
+  }
+  
+  /* Contenedor principal */
+  .login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: var(--background-color);
+    padding: 1rem;
+  }
+  
+  /* Tarjeta de login */
+  .login-card {
+    width: 100%;
+    max-width: 360px;
+    background-color: var(--white);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Título */
+  .login-card h2 {
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: var(--text-color);
+  }
+  
+  /* Campos del formulario */
+  .login-card label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-color);
+  }
+  
+  .login-card input {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+  }
+  
+  /* Botón */
+  .login-card button {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .login-card button:hover {
+    background-color: #2563EB;
+  }
+  
+  /* Mensaje de error */
+  .error-message {
+    color: var(--error-color);
+    background-color: rgba(239, 68, 68, 0.1);
+    border-radius: var(--border-radius);
+    padding: 0.5rem;
+    text-align: center;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+  }
+  
