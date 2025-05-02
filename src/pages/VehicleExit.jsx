@@ -38,19 +38,9 @@ const VehicleExit = () => {
 
       <div className="exit-grid">
         {!parkingReceipt ? (
-          <>
-            <div>
-              <VehicleForm onSubmit={handleVehicleExit} formType="exit" />
-            </div>
-            <div className="exit-instructions">
-              <h3>Instrucciones</h3>
-              <ul>
-                <li>Ingrese la placa del vehículo.</li>
-                <li>El sistema calculará el tiempo y tarifa.</li>
-                <li>Presione "Registrar Salida".</li>
-              </ul>
-            </div>
-          </>
+          <div>
+            <VehicleForm onSubmit={handleVehicleExit} formType="exit" />
+          </div>
         ) : (
           <div className="receipt-container">
             <div id="receipt">

@@ -17,70 +17,73 @@ export const registrarEntrada = async (req, res) => {
 };
 
 export const registrarSalida = async (req, res) => {
-    const { registroID } = req.body;
-
+    const { plateNumber } = req.body;
+  
     try {
-        const pool = await sql.connect(config);
-
-        // Obtener el registro por ID
-        const registroResult = await pool
-            .request()
-            .input('registroID', sql.Int, registroID)
-            .query('SELECT * FROM Registros WHERE RegistroID = @registroID');
-
-        if (registroResult.recordset.length === 0) {
-            return res.status(404).json({ error: 'Registro no encontrado' });
-        }
-
-        const registro = registroResult.recordset[0];
-        const horaSalida = new Date();
-        const horaEntrada = new Date(registro.HoraEntrada);
-
-        // Calcular el tiempo estacionado en minutos
-        const tiempoEstacionadoMinutos = Math.ceil((horaSalida - horaEntrada) / 60000);
-
-        // Obtener la tarifa desde la tabla Tarifas
-        const tarifaResult = await pool
-            .request()
-            .input('tipo', sql.NVarChar, registro.Tipo)
-            .query('SELECT Tarifa FROM Tarifas WHERE Tipo = @tipo');
-
-        if (tarifaResult.recordset.length === 0) {
-            return res.status(404).json({ error: 'Tarifa no encontrada para este tipo de vehículo' });
-        }
-
-        const tarifa = tarifaResult.recordset[0].Tarifa;
-
-        // Calcular el monto total
-        const montoTotal = tarifa * tiempoEstacionadoMinutos;
-
-        // Actualizar el registro en la base de datos
-        await pool
-            .request()
-            .input('registroID', sql.Int, registroID)
-            .input('horaSalida', sql.DateTime, horaSalida)
-            .input('tiempoEstacionadoMinutos', sql.Int, tiempoEstacionadoMinutos)
-            .input('tarifa', sql.Decimal(10, 2), montoTotal)
-            .query(
-                `UPDATE Registros
-                 SET HoraSalida = @horaSalida,
-                     TiempoEstacionadoMinutos = @tiempoEstacionadoMinutos,
-                     Tarifa = @tarifa
-                 WHERE RegistroID = @registroID`
-            );
-
-        res.json({
-            message: 'Salida registrada correctamente',
-            registroID,
-            horaSalida,
-            tiempoEstacionadoMinutos,
-            tarifa: montoTotal,
-        });
+      const pool = await poolPromise;
+  
+      // Buscar el registro activo por placa
+      const registroResult = await pool
+        .request()
+        .input('plateNumber', sql.NVarChar, plateNumber)
+        .query('SELECT * FROM Registros WHERE Placa = @plateNumber AND HoraSalida IS NULL');
+  
+      if (registroResult.recordset.length === 0) {
+        return res.status(404).json({ error: 'No se encontró un registro activo para esta placa.' });
+      }
+  
+      const registro = registroResult.recordset[0];
+      const horaSalida = new Date();
+      const horaEntrada = new Date(registro.HoraEntrada);
+  
+      // Calcular el tiempo estacionado en minutos
+      const tiempoEstacionadoMinutos = Math.ceil((horaSalida - horaEntrada) / 60000);
+  
+      // Obtener la tarifa desde la tabla Tarifas
+      const tarifaResult = await pool
+        .request()
+        .input('tipo', sql.NVarChar, registro.Tipo)
+        .query('SELECT Tarifa FROM Tarifas WHERE Tipo = @tipo');
+  
+      if (tarifaResult.recordset.length === 0) {
+        return res.status(404).json({ error: 'No se encontró una tarifa para este tipo de vehículo.' });
+      }
+  
+      const tarifa = tarifaResult.recordset[0].Tarifa;
+  
+      // Calcular el monto total
+      const montoTotal = tarifa * tiempoEstacionadoMinutos;
+  
+      // Actualizar el registro en la base de datos
+      await pool
+        .request()
+        .input('registroID', sql.Int, registro.RegistroID)
+        .input('horaSalida', sql.DateTime, horaSalida)
+        .input('tiempoEstacionadoMinutos', sql.Int, tiempoEstacionadoMinutos)
+        .input('tarifa', sql.Decimal(10, 2), montoTotal)
+        .query(`
+          UPDATE Registros
+          SET HoraSalida = @horaSalida,
+              TiempoEstacionadoMinutos = @tiempoEstacionadoMinutos,
+              Tarifa = @tarifa
+          WHERE RegistroID = @registroID
+        `);
+  
+      res.json({
+        message: 'Salida registrada correctamente',
+        Placa: registro.Placa,
+        Tipo: registro.Tipo,
+        HoraEntrada: registro.HoraEntrada,
+        HoraSalida: horaSalida,
+        TiempoEstacionadoMinutos: tiempoEstacionadoMinutos,
+        Tarifa: montoTotal,
+      });
     } catch (error) {
-        console.error('Error al registrar la salida:', error);
-        res.status(500).json({ error: 'Error al registrar la salida' });
+      console.error('Error al registrar la salida:', error);
+      res.status(500).json({ error: 'Error al registrar la salida', details: error.message });
     }
-};
+  };
+  
 
 export const obtenerVehiculosActivos = async (req, res) => {
     try {
