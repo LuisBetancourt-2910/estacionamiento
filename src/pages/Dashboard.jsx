@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { FaCar, FaMoneyBillWave, FaClipboardList, FaArrowRight, FaArrowLeft } from 'react-icons/fa';
-import { obtenerVehiculos, obtenerTarifasDelDia } from '../services/registroService';
+import { obtenerVehiculos, obtenerTarifasDelDia, obtenerSalidasDelDia } from '../services/registroService'; // Importar el nuevo servicio
 import { VehicleContext } from '../context/VehicleContext';
 import '../styles/Dashboard.css';
 
@@ -30,9 +30,7 @@ const Dashboard = () => {
         };
 
         const entriesToday = data.filter(v => isToday(v.HoraEntrada));
-        const exitsToday = data.filter(v => v.HoraSalida && isToday(v.HoraSalida));
         setTodaysEntries(entriesToday.length);
-        setTodaysExitedVehicles(exitsToday.length);
       } catch (error) {
         console.error('Error al obtener los vehículos:', error);
       }
@@ -47,8 +45,18 @@ const Dashboard = () => {
       }
     };
 
+    const fetchTodaysExits = async () => {
+      try {
+        const { totalSalidasHoy } = await obtenerSalidasDelDia(); // Llamar al nuevo servicio
+        setTodaysExitedVehicles(totalSalidasHoy); // Actualizar el estado con el total de salidas
+      } catch (error) {
+        console.error('Error al obtener las salidas del día:', error);
+      }
+    };
+
     fetchVehicles();
     fetchTodaysRevenue();
+    fetchTodaysExits(); // Llamar a la función para obtener las salidas del día
   }, []);
 
   // Vehículos activos (sin HoraSalida)

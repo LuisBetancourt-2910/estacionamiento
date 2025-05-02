@@ -22,3 +22,7 @@ export const obtenerTarifasDelDia = async () => {
     return response.data;
 };
 
+export const obtenerSalidasDelDia = async () => {
+    const response = await axios.get(`${API_URL}/salidas-dia`);
+    return response.data;
+};

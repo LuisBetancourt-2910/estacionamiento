@@ -129,3 +129,25 @@ export const obtenerTarifasDelDia = async (req, res) => {
         res.status(500).send('Error al obtener las tarifas del día');
     }
 };
+
+export const obtenerSalidasDelDia = async (req, res) => {
+    console.log('Llamada a obtenerSalidasDelDia');
+    try {
+        const pool = await poolPromise;
+
+        // Ajustar la hora restando 6 horas a HoraSalida
+        const result = await pool.request().query(`
+            SELECT COUNT(*) AS TotalSalidasHoy
+            FROM Registros
+            WHERE CONVERT(DATE, DATEADD(HOUR, -6, HoraSalida)) = CONVERT(DATE, GETDATE());
+        `);
+
+        console.log('Resultado de la consulta:', result.recordset);
+
+        const totalSalidasHoy = result.recordset[0].TotalSalidasHoy;
+        res.json({ totalSalidasHoy });
+    } catch (err) {
+        console.error('Error al obtener las salidas del día:', err);
+        res.status(500).send('Error al obtener las salidas del día');
+    }
+};

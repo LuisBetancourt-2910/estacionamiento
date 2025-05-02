@@ -3,6 +3,7 @@ import { registrarEntrada, registrarSalida } from '../controllers/registrosContr
 import { obtenerVehiculosActivos } from '../controllers/registrosController.js';
 import { obtenerVehiculos } from '../controllers/registrosController.js';
 import { obtenerTarifasDelDia } from '../controllers/registrosController.js';
+import { obtenerSalidasDelDia } from '../controllers/registrosController.js';
 
 const router = express.Router();
 
@@ -11,5 +12,6 @@ router.post('/salida', registrarSalida);
 router.get('/activos', obtenerVehiculosActivos);
 router.get('/vehiculos', obtenerVehiculos);
 router.get('/tarifas-dia', obtenerTarifasDelDia);
+router.get('/salidas-dia', obtenerSalidasDelDia);
 
 export default router;
