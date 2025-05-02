@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaSave, FaCog, FaPlus, FaTrash } from 'react-icons/fa';
 import '../styles/Settings.css';
 import { obtenerTarifas, guardarTarifa, eliminarTarifa } from '../services/tarifaService';
+import { registrarUsuario } from '../services/usuarioService';
 
 const Settings = () => {
   const [settings, setSettings] = useState({
@@ -141,19 +142,27 @@ const Settings = () => {
   };
 
   // Agregar un nuevo usuario
-  const handleAddUser = () => {
+  const handleAddUser = async () => {
     if (!newUser.username.trim() || !newUser.password.trim()) {
       alert('El nombre de usuario y la contraseña no pueden estar vacíos.');
       return;
     }
-
-    // Agregar el nuevo usuario a la lista
-    setUsers((prev) => [...prev, { ...newUser }]);
-
-    setNewUser({ username: '', password: '' });
-    alert('Usuario agregado correctamente.');
+  
+    try {
+      await registrarUsuario(newUser);
+      alert('Usuario registrado correctamente.');
+      setUsers((prev) => [...prev, { ...newUser }]);
+      setNewUser({ username: '', password: '' });
+    } catch (error) {
+      console.error('Error al registrar el usuario:', error);
+      if (error.response?.data?.error) {
+        alert(error.response.data.error);
+      } else {
+        alert('Error al registrar usuario. Intenta nuevamente.');
+      }
+    }
   };
-
+  
   // Eliminar un usuario
   const handleDeleteUser = (username) => {
     setUsers((prev) => prev.filter((user) => user.username !== username));
