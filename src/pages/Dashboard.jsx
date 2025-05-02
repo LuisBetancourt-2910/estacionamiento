@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { FaCar, FaMoneyBillWave, FaClipboardList, FaArrowRight, FaArrowLeft } from 'react-icons/fa';
-import { obtenerVehiculos, obtenerTarifasDelDia, obtenerSalidasDelDia } from '../services/registroService'; // Importar el nuevo servicio
+import { obtenerVehiculos, obtenerTarifasDelDia, obtenerSalidasDelDia } from '../services/registroService';
 import { VehicleContext } from '../context/VehicleContext';
 import '../styles/Dashboard.css';
 
 const Dashboard = () => {
-  const { vehicles: contextVehicles } = useContext(VehicleContext); // Datos del contexto
-  const [vehicles, setVehicles] = useState([]); // Datos del backend
+  const { vehicles: contextVehicles } = useContext(VehicleContext);
+  const [vehicles, setVehicles] = useState([]);
   const [todaysRevenue, setTodaysRevenue] = useState(0);
   const [todaysEntries, setTodaysEntries] = useState(0);
   const [todaysExitedVehicles, setTodaysExitedVehicles] = useState(0);
@@ -18,7 +18,6 @@ const Dashboard = () => {
         const data = await obtenerVehiculos();
         setVehicles(data);
 
-        // Calcular estadísticas
         const today = new Date();
         const isToday = (dateStr) => {
           const date = new Date(dateStr);
@@ -47,8 +46,8 @@ const Dashboard = () => {
 
     const fetchTodaysExits = async () => {
       try {
-        const { totalSalidasHoy } = await obtenerSalidasDelDia(); // Llamar al nuevo servicio
-        setTodaysExitedVehicles(totalSalidasHoy); // Actualizar el estado con el total de salidas
+        const { totalSalidasHoy } = await obtenerSalidasDelDia();
+        setTodaysExitedVehicles(totalSalidasHoy);
       } catch (error) {
         console.error('Error al obtener las salidas del día:', error);
       }
@@ -56,16 +55,11 @@ const Dashboard = () => {
 
     fetchVehicles();
     fetchTodaysRevenue();
-    fetchTodaysExits(); // Llamar a la función para obtener las salidas del día
+    fetchTodaysExits();
   }, []);
 
-  // Vehículos activos (sin HoraSalida)
   const activeVehicles = vehicles.filter(v => !v.HoraSalida);
 
-  // Últimas entradas desde el contexto
-  const lastEntries = [...contextVehicles].reverse().slice(0, 5);
-
-  // Contar tipos de vehículos activos
   const typeCounts = {
     Oficial: 0,
     Residente: 0,
@@ -137,7 +131,7 @@ const Dashboard = () => {
                     <span>{typeCounts[type]}</span>
                   </div>
                   <div className="progress-bar">
-                  <div className={`progress-fill ${type.replace(' ', '')}`} style={{ width: `${percent}%` }}></div>
+                    <div className={`progress-fill ${type.replace(' ', '')}`} style={{ width: `${percent}%` }}></div>
                   </div>
                 </div>
               );
@@ -175,45 +169,22 @@ const Dashboard = () => {
         </div>
 
         <div className="dashboard-panel">
-          <h3 className="panel-title">Últimas Entradas</h3>
-          <div className="last-entries">
-            <ul>
-              {lastEntries.length === 0 ? (
-                <li className="entry-item">
-                  <div className="entry-dot"></div>
-                  <span className="entry-plate">-</span>
-                  <span className="entry-time">-</span>
-                </li>
-              ) : (
-                lastEntries.map((v, i) => (
-                  <li key={i} className="entry-item">
-                    <div className="entry-dot"></div>
-                    <span className="entry-plate">{v.plateNumber}</span>
-                    <span className="entry-time">{new Date(v.entryTime).toLocaleTimeString()}</span>
-                  </li>
-                ))
-              )}
-            </ul>
+          <div className="panel-header">
+            <h3 className="panel-title">Vehículos en Estacionamiento</h3>
+            <span className="last-update">Actualizado: {new Date().toLocaleTimeString()}</span>
           </div>
+          {activeVehicles.length === 0 ? (
+            <div className="vehicle-list-placeholder">Sin datos disponibles</div>
+          ) : (
+            <ul>
+              {activeVehicles.map((v, i) => (
+                <li key={i}>
+                  {v.Placa} - {v.Tipo} - {new Date(v.HoraEntrada).toLocaleTimeString()}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-      </div>
-
-      <div className="dashboard-panel">
-        <div className="panel-header">
-          <h3 className="panel-title">Vehículos en Estacionamiento</h3>
-          <span className="last-update">Actualizado: {new Date().toLocaleTimeString()}</span>
-        </div>
-        {activeVehicles.length === 0 ? (
-          <div className="vehicle-list-placeholder">Sin datos disponibles</div>
-        ) : (
-          <ul>
-            {activeVehicles.map((v, i) => (
-              <li key={i}>
-                {v.Placa} - {v.Tipo}
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
     </div>
   );
