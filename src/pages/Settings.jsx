@@ -1,53 +1,96 @@
 import React, { useState } from 'react';
-import { FaSave, FaCog } from 'react-icons/fa';
+import { FaSave, FaCog, FaPlus, FaTrash } from 'react-icons/fa';
 import '../styles/Settings.css';
 
 const Settings = () => {
   const [settings, setSettings] = useState({
     rates: {
-      resident: 1.00,
-      noResident: 3.00,
+      resident: 1.0,
+      noResident: 3.0,
     },
-    notifications: {
-      emailAlerts: true,
-      dailyReport: true,
-    },
-    system: {
-      autoBackup: true,
-      backupFrequency: 'daily',
-    }
+    vehicleTypes: ['resident', 'noResident'], // Tipos de vehículos iniciales
+    users: [], // Lista de usuarios
   });
 
+  const [newVehicleType, setNewVehicleType] = useState(''); // Estado para el nuevo tipo de vehículo
+  const [newUser, setNewUser] = useState({ username: '', password: '' }); // Estado para el nuevo usuario
+
+  // Manejar cambios en las tarifas
   const handleRateChange = (e) => {
     const { name, value } = e.target;
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       rates: {
         ...prev.rates,
-        [name]: parseFloat(value)
-      }
+        [name]: parseFloat(value),
+      },
     }));
   };
 
-  const handleNotificationChange = (e) => {
-    const { name, checked } = e.target;
-    setSettings(prev => ({
+  // Agregar un nuevo tipo de vehículo
+  const handleAddVehicleType = () => {
+    if (!newVehicleType.trim()) {
+      alert('El tipo de vehículo no puede estar vacío.');
+      return;
+    }
+
+    if (settings.vehicleTypes.includes(newVehicleType)) {
+      alert('Este tipo de vehículo ya existe.');
+      return;
+    }
+
+    setSettings((prev) => ({
       ...prev,
-      notifications: {
-        ...prev.notifications,
-        [name]: checked
-      }
+      vehicleTypes: [...prev.vehicleTypes, newVehicleType],
+      rates: {
+        ...prev.rates,
+        [newVehicleType]: 0.0, // Agregar tarifa inicial para el nuevo tipo
+      },
+    }));
+    setNewVehicleType(''); // Limpiar el campo de entrada
+  };
+
+  // Eliminar un tipo de vehículo
+  const handleDeleteVehicleType = (type) => {
+    setSettings((prev) => {
+      const { [type]: _, ...newRates } = prev.rates; // Eliminar la tarifa asociada
+      return {
+        ...prev,
+        vehicleTypes: prev.vehicleTypes.filter((vehicle) => vehicle !== type),
+        rates: newRates,
+      };
+    });
+  };
+
+  // Manejar cambios en el formulario de nuevo usuario
+  const handleUserChange = (e) => {
+    const { name, value } = e.target;
+    setNewUser((prev) => ({
+      ...prev,
+      [name]: value,
     }));
   };
 
-  const handleSystemChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setSettings(prev => ({
+  // Agregar un nuevo usuario
+  const handleAddUser = () => {
+    if (!newUser.username.trim() || !newUser.password.trim()) {
+      alert('El nombre de usuario y la contraseña no pueden estar vacíos.');
+      return;
+    }
+
+    setSettings((prev) => ({
       ...prev,
-      system: {
-        ...prev.system,
-        [name]: type === 'checkbox' ? checked : value
-      }
+      users: [...prev.users, newUser],
+    }));
+    setNewUser({ username: '', password: '' }); // Limpiar el formulario
+    alert('Usuario agregado correctamente.');
+  };
+
+  // Eliminar un usuario
+  const handleDeleteUser = (username) => {
+    setSettings((prev) => ({
+      ...prev,
+      users: prev.users.filter((user) => user.username !== username),
     }));
   };
 
@@ -63,105 +106,123 @@ const Settings = () => {
       <form onSubmit={handleSubmit} className="settings-form">
         {/* Tarifas */}
         <div className="settings-card">
-          <h3 className="settings-card-title"><FaCog /> Tarifas</h3>
+          <h3 className="settings-card-title">
+            <FaCog /> Tarifas
+          </h3>
 
-          <div>
-            <label htmlFor="resident">Tarifa para Residentes (MXN por minuto)</label>
-            <input
-              id="resident"
-              name="resident"
-              type="number"
-              step="0.01"
-              min="0"
-              value={settings.rates.resident}
-              onChange={handleRateChange}
-              className="settings-input"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="noResident">Tarifa para No Residentes (MXN por minuto)</label>
-            <input
-              id="noResident"
-              name="noResident"
-              type="number"
-              step="0.01"
-              min="0"
-              value={settings.rates.noResident}
-              onChange={handleRateChange}
-              className="settings-input"
-            />
-          </div>
+          {settings.vehicleTypes.map((type) => (
+            <div key={type} className="settings-item">
+              <label htmlFor={type}>
+                Tarifa para {type.charAt(0).toUpperCase() + type.slice(1)} (MXN por minuto)
+              </label>
+              <input
+                id={type}
+                name={type}
+                type="number"
+                step="0.01"
+                min="0"
+                value={settings.rates[type]}
+                onChange={handleRateChange}
+                className="settings-input"
+              />
+              <button
+                type="button"
+                className="settings-delete-button"
+                onClick={() => handleDeleteVehicleType(type)}
+              >
+                <FaTrash /> Eliminar
+              </button>
+            </div>
+          ))}
 
           <div className="settings-note">
             Nota: Los vehículos oficiales no pagan tarifa.
           </div>
         </div>
 
-        {/* Notificaciones */}
+        {/* Agregar Tipo de Vehículo */}
         <div className="settings-card">
-          <h3 className="settings-card-title"><FaCog /> Notificaciones</h3>
+          <h3 className="settings-card-title">
+            <FaCog /> Agregar Tipo de Vehículo
+          </h3>
 
           <div>
+            <label htmlFor="newVehicleType">Nuevo Tipo de Vehículo</label>
             <input
-              id="emailAlerts"
-              name="emailAlerts"
-              type="checkbox"
-              checked={settings.notifications.emailAlerts}
-              onChange={handleNotificationChange}
+              id="newVehicleType"
+              type="text"
+              value={newVehicleType}
+              onChange={(e) => setNewVehicleType(e.target.value)}
+              className="settings-input"
             />
-            <label htmlFor="emailAlerts" className="settings-checkbox-label">
-              Recibir alertas por correo electrónico
-            </label>
           </div>
 
-          <div>
-            <input
-              id="dailyReport"
-              name="dailyReport"
-              type="checkbox"
-              checked={settings.notifications.dailyReport}
-              onChange={handleNotificationChange}
-            />
-            <label htmlFor="dailyReport" className="settings-checkbox-label">
-              Recibir reporte diario
-            </label>
-          </div>
+          <button
+            type="button"
+            className="settings-add-button"
+            onClick={handleAddVehicleType}
+          >
+            <FaPlus /> Agregar Tipo de Vehículo
+          </button>
         </div>
 
-        {/* Sistema */}
+        {/* Agregar Usuario */}
         <div className="settings-card">
-          <h3 className="settings-card-title"><FaCog /> Sistema</h3>
+          <h3 className="settings-card-title">
+            <FaCog /> Agregar Usuario
+          </h3>
 
           <div>
+            <label htmlFor="username">Nombre de Usuario</label>
             <input
-              id="autoBackup"
-              name="autoBackup"
-              type="checkbox"
-              checked={settings.system.autoBackup}
-              onChange={handleSystemChange}
+              id="username"
+              name="username"
+              type="text"
+              value={newUser.username}
+              onChange={handleUserChange}
+              className="settings-input"
             />
-            <label htmlFor="autoBackup" className="settings-checkbox-label">
-              Copia de seguridad automática
-            </label>
           </div>
 
-          {settings.system.autoBackup && (
-            <div>
-              <label htmlFor="backupFrequency">Frecuencia de copia de seguridad</label>
-              <select
-                id="backupFrequency"
-                name="backupFrequency"
-                value={settings.system.backupFrequency}
-                onChange={handleSystemChange}
-                className="settings-select"
+          <div>
+            <label htmlFor="password">Contraseña</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              value={newUser.password}
+              onChange={handleUserChange}
+              className="settings-input"
+            />
+          </div>
+
+          <button
+            type="button"
+            className="settings-add-button"
+            onClick={handleAddUser}
+          >
+            <FaPlus /> Agregar Usuario
+          </button>
+        </div>
+
+        {/* Lista de Usuarios */}
+        <div className="settings-card">
+          <h3 className="settings-card-title">
+            <FaCog /> Usuarios
+          </h3>
+
+          {settings.users.map((user) => (
+            <div key={user.username} className="settings-item">
+              <span>{user.username}</span>
+              <button
+                type="button"
+                className="settings-delete-button"
+                onClick={() => handleDeleteUser(user.username)}
               >
-                <option value="hourly">Cada hora</option>
-                <option value="daily">Diaria</option>
-                <option value="weekly">Semanal</option>
-              </select>
+                <FaTrash /> Eliminar
+              </button>
             </div>
-          )}
+          ))}
         </div>
       </form>
 
