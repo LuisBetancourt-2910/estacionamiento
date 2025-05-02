@@ -17,65 +17,68 @@ export const registrarEntrada = async (req, res) => {
 };
 
 export const registrarSalida = async (req, res) => {
-    const { plateNumber } = req.body;
+    const { registroID } = req.body;
 
     try {
-        const pool = await poolPromise;
+        const pool = await sql.connect(config);
 
-        // Obtener el registro activo del vehículo
-        const registroResult = await pool.request()
-            .input('Placa', sql.NVarChar, plateNumber)
-            .query(`
-                SELECT TOP 1 *
-                FROM Registros
-                WHERE Placa = @Placa AND HoraSalida IS NULL
-                ORDER BY HoraEntrada DESC
-            `);
+        // Obtener el registro por ID
+        const registroResult = await pool
+            .request()
+            .input('registroID', sql.Int, registroID)
+            .query('SELECT * FROM Registros WHERE RegistroID = @registroID');
 
         if (registroResult.recordset.length === 0) {
-            return res.status(404).send('No se encontró un registro activo para esta placa');
+            return res.status(404).json({ error: 'Registro no encontrado' });
         }
 
         const registro = registroResult.recordset[0];
-        const horaSalida = new Date(); // Hora actual
-        const horaEntrada = new Date(registro.HoraEntrada); // Hora de entrada desde la base de datos
+        const horaSalida = new Date();
+        const horaEntrada = new Date(registro.HoraEntrada);
 
         // Calcular el tiempo estacionado en minutos
-        const tiempoEstacionadoMinutos = Math.ceil((horaSalida - horaEntrada) / (1000 * 60)); // Diferencia en milisegundos, convertida a minutos
+        const tiempoEstacionadoMinutos = Math.ceil((horaSalida - horaEntrada) / 60000);
 
-        // Calcular la tarifa según el tipo de vehículo
-        let tarifa = 0;
-        if (registro.Tipo === 'Residente') {
-            tarifa = tiempoEstacionadoMinutos * 1; // $1.00 MXN por minuto
-        } else if (registro.Tipo === 'No Residente') {
-            tarifa = tiempoEstacionadoMinutos * 3; // $3.00 MXN por minuto
+        // Obtener la tarifa desde la tabla Tarifas
+        const tarifaResult = await pool
+            .request()
+            .input('tipo', sql.NVarChar, registro.Tipo)
+            .query('SELECT Tarifa FROM Tarifas WHERE Tipo = @tipo');
+
+        if (tarifaResult.recordset.length === 0) {
+            return res.status(404).json({ error: 'Tarifa no encontrada para este tipo de vehículo' });
         }
-        // Vehículos Oficiales no pagan, tarifa permanece en 0
 
-        // Actualizar el registro con la hora de salida, tiempo estacionado y tarifa
-        await pool.request()
-            .input('HoraSalida', sql.DateTime, horaSalida)
-            .input('TiempoEstacionadoMinutos', sql.Int, tiempoEstacionadoMinutos)
-            .input('Tarifa', sql.Decimal(10, 2), tarifa)
-            .input('RegistroID', sql.Int, registro.RegistroID)
-            .query(`
-                UPDATE Registros
-                SET HoraSalida = @HoraSalida,
-                    TiempoEstacionadoMinutos = @TiempoEstacionadoMinutos,
-                    Tarifa = @Tarifa
-                WHERE RegistroID = @RegistroID
-            `);
+        const tarifa = tarifaResult.recordset[0].Tarifa;
 
-        // Devolver el registro actualizado
+        // Calcular el monto total
+        const montoTotal = tarifa * tiempoEstacionadoMinutos;
+
+        // Actualizar el registro en la base de datos
+        await pool
+            .request()
+            .input('registroID', sql.Int, registroID)
+            .input('horaSalida', sql.DateTime, horaSalida)
+            .input('tiempoEstacionadoMinutos', sql.Int, tiempoEstacionadoMinutos)
+            .input('tarifa', sql.Decimal(10, 2), montoTotal)
+            .query(
+                `UPDATE Registros
+                 SET HoraSalida = @horaSalida,
+                     TiempoEstacionadoMinutos = @tiempoEstacionadoMinutos,
+                     Tarifa = @tarifa
+                 WHERE RegistroID = @registroID`
+            );
+
         res.json({
-            ...registro,
-            HoraSalida: horaSalida,
-            TiempoEstacionadoMinutos: tiempoEstacionadoMinutos,
-            Tarifa: tarifa,
+            message: 'Salida registrada correctamente',
+            registroID,
+            horaSalida,
+            tiempoEstacionadoMinutos,
+            tarifa: montoTotal,
         });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Error al registrar la salida');
+    } catch (error) {
+        console.error('Error al registrar la salida:', error);
+        res.status(500).json({ error: 'Error al registrar la salida' });
     }
 };
 

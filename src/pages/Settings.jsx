@@ -1,23 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaSave, FaCog, FaPlus, FaTrash } from 'react-icons/fa';
 import '../styles/Settings.css';
+import { obtenerTarifas, guardarTarifa, eliminarTarifa } from '../services/tarifaService';
 
 const Settings = () => {
   const [settings, setSettings] = useState({
-    rates: {
-      resident: 1.0,
-      noResident: 3.0,
-    },
-    vehicleTypes: ['resident', 'noResident'], // Tipos de vehículos iniciales
-    users: [], // Lista de usuarios
+    rates: {},
+    vehicleTypes: [],
   });
 
-  const [newVehicleType, setNewVehicleType] = useState(''); // Estado para el nuevo tipo de vehículo
-  const [newUser, setNewUser] = useState({ username: '', password: '' }); // Estado para el nuevo usuario
+  const [newVehicleType, setNewVehicleType] = useState('');
+  const [newUser, setNewUser] = useState({ username: '', password: '' });
+  const [users, setUsers] = useState([]); // Lista de usuarios
+  const [isLoading, setIsLoading] = useState(false); // Estado para manejar la carga
+
+  // Cargar tarifas desde el backend al montar el componente
+  useEffect(() => {
+    const fetchTarifas = async () => {
+      try {
+        const tarifas = await obtenerTarifas();
+
+        const rates = {};
+        const vehicleTypes = [];
+        tarifas.forEach((tarifa) => {
+          rates[tarifa.Tipo] = tarifa.Tarifa;
+          vehicleTypes.push(tarifa.Tipo);
+        });
+
+        setSettings({
+          rates,
+          vehicleTypes,
+        });
+      } catch (error) {
+        console.error('Error al cargar las tarifas:', error);
+        alert('No se pudieron cargar las tarifas. Intenta nuevamente.');
+      }
+    };
+
+    fetchTarifas();
+  }, []);
 
   // Manejar cambios en las tarifas
-  const handleRateChange = (e) => {
+  const handleRateChange = async (e) => {
     const { name, value } = e.target;
+
+    if (isNaN(value) || value < 0) {
+      alert('Por favor, ingresa un número válido para la tarifa.');
+      return;
+    }
+
     setSettings((prev) => ({
       ...prev,
       rates: {
@@ -25,10 +56,21 @@ const Settings = () => {
         [name]: parseFloat(value),
       },
     }));
+
+    try {
+      await guardarTarifa({
+        tipo: name,
+        tarifa: parseFloat(value),
+      });
+      alert('Tarifa guardada correctamente.');
+    } catch (error) {
+      console.error('Error al guardar la tarifa:', error);
+      alert('No se pudo guardar la tarifa. Intenta nuevamente.');
+    }
   };
 
   // Agregar un nuevo tipo de vehículo
-  const handleAddVehicleType = () => {
+  const handleAddVehicleType = async () => {
     if (!newVehicleType.trim()) {
       alert('El tipo de vehículo no puede estar vacío.');
       return;
@@ -39,27 +81,54 @@ const Settings = () => {
       return;
     }
 
-    setSettings((prev) => ({
-      ...prev,
-      vehicleTypes: [...prev.vehicleTypes, newVehicleType],
-      rates: {
-        ...prev.rates,
-        [newVehicleType]: 0.0, // Agregar tarifa inicial para el nuevo tipo
-      },
-    }));
-    setNewVehicleType(''); // Limpiar el campo de entrada
+    try {
+      setIsLoading(true);
+      await guardarTarifa({
+        tipo: newVehicleType,
+        tarifa: 0.0,
+      });
+
+      setSettings((prev) => ({
+        ...prev,
+        vehicleTypes: [...prev.vehicleTypes, newVehicleType],
+        rates: {
+          ...prev.rates,
+          [newVehicleType]: 0.0,
+        },
+      }));
+
+      setNewVehicleType('');
+      alert('Nuevo tipo de vehículo agregado correctamente.');
+    } catch (error) {
+      console.error('Error al agregar el tipo de vehículo:', error);
+      alert('No se pudo agregar el tipo de vehículo. Intenta nuevamente.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Eliminar un tipo de vehículo
-  const handleDeleteVehicleType = (type) => {
-    setSettings((prev) => {
-      const { [type]: _, ...newRates } = prev.rates; // Eliminar la tarifa asociada
-      return {
-        ...prev,
-        vehicleTypes: prev.vehicleTypes.filter((vehicle) => vehicle !== type),
-        rates: newRates,
-      };
-    });
+  const handleDeleteVehicleType = async (type) => {
+    try {
+      setIsLoading(true);
+      await eliminarTarifa(type);
+
+      setSettings((prev) => {
+        const { [type]: _, ...newRates } = prev.rates;
+        return {
+          ...prev,
+          vehicleTypes: prev.vehicleTypes.filter((vehicle) => vehicle !== type),
+          rates: newRates,
+        };
+      });
+
+      alert('Tipo de vehículo eliminado correctamente.');
+    } catch (error) {
+      console.error('Error al eliminar el tipo de vehículo:', error);
+      alert('No se pudo eliminar el tipo de vehículo. Intenta nuevamente.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Manejar cambios en el formulario de nuevo usuario
@@ -78,25 +147,22 @@ const Settings = () => {
       return;
     }
 
-    setSettings((prev) => ({
-      ...prev,
-      users: [...prev.users, newUser],
-    }));
-    setNewUser({ username: '', password: '' }); // Limpiar el formulario
+    // Agregar el nuevo usuario a la lista
+    setUsers((prev) => [...prev, { ...newUser }]);
+
+    setNewUser({ username: '', password: '' });
     alert('Usuario agregado correctamente.');
   };
 
   // Eliminar un usuario
   const handleDeleteUser = (username) => {
-    setSettings((prev) => ({
-      ...prev,
-      users: prev.users.filter((user) => user.username !== username),
-    }));
+    setUsers((prev) => prev.filter((user) => user.username !== username));
+    alert('Usuario eliminado correctamente.');
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert('Configuración guardada correctamente');
+    alert('Configuración guardada correctamente.');
   };
 
   return (
@@ -129,6 +195,7 @@ const Settings = () => {
                 type="button"
                 className="settings-delete-button"
                 onClick={() => handleDeleteVehicleType(type)}
+                disabled={isLoading}
               >
                 <FaTrash /> Eliminar
               </button>
@@ -161,6 +228,7 @@ const Settings = () => {
             type="button"
             className="settings-add-button"
             onClick={handleAddVehicleType}
+            disabled={isLoading}
           >
             <FaPlus /> Agregar Tipo de Vehículo
           </button>
@@ -203,26 +271,22 @@ const Settings = () => {
           >
             <FaPlus /> Agregar Usuario
           </button>
-        </div>
 
-        {/* Lista de Usuarios */}
-        <div className="settings-card">
-          <h3 className="settings-card-title">
-            <FaCog /> Usuarios
-          </h3>
-
-          {settings.users.map((user) => (
-            <div key={user.username} className="settings-item">
-              <span>{user.username}</span>
-              <button
-                type="button"
-                className="settings-delete-button"
-                onClick={() => handleDeleteUser(user.username)}
-              >
-                <FaTrash /> Eliminar
-              </button>
-            </div>
-          ))}
+          {/* Lista de Usuarios */}
+          <div className="users-list">
+            {users.map((user) => (
+              <div key={user.username} className="settings-item">
+                <span>{user.username}</span>
+                <button
+                  type="button"
+                  className="settings-delete-button"
+                  onClick={() => handleDeleteUser(user.username)}
+                >
+                  <FaTrash /> Eliminar
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       </form>
 
