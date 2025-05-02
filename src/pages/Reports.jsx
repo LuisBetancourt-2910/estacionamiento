@@ -1,12 +1,10 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaFileExcel } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
-import { VehicleContext } from '../context/VehicleContext';
+import axios from 'axios'; 
 import '../styles/Reports.css';
 
 const Reports = () => {
-  const { vehicles } = useContext(VehicleContext);
-
   const [dateFilter, setDateFilter] = useState({
     date: new Date().toLocaleDateString('en-CA'),
     startTime: '00:00',
@@ -15,25 +13,38 @@ const Reports = () => {
 
   const [filteredRecords, setFilteredRecords] = useState([]);
 
+  // Función para obtener registros desde el backend
+  const fetchRecords = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/api/registros/vehiculos'); // Endpoint del backend
+      const records = response.data;
+
+      // Filtrar los registros según los filtros de fecha y hora
+      const { date, startTime, endTime } = dateFilter;
+      const filterStart = new Date(`${date}T${startTime}`);
+      const filterEnd = new Date(`${date}T${endTime}`);
+
+      const filtered = records.filter((record) => {
+        if (!record.HoraEntrada) return false;
+        const entryTime = new Date(record.HoraEntrada);
+        return entryTime >= filterStart && entryTime <= filterEnd;
+      });
+
+      setFilteredRecords(filtered);
+    } catch (error) {
+      console.error('Error al obtener los registros:', error);
+    }
+  };
+
+  // Llamar a fetchRecords cada vez que cambien los filtros
+  useEffect(() => {
+    fetchRecords();
+  }, [dateFilter]);
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setDateFilter((prev) => ({ ...prev, [name]: value }));
   };
-
-  // Filtrado automático
-  useEffect(() => {
-    const { date, startTime, endTime } = dateFilter;
-    const filterStart = new Date(`${date}T${startTime}`);
-    const filterEnd = new Date(`${date}T${endTime}`);
-
-    const results = vehicles.filter((record) => {
-      if (!record.entryTime) return false;
-      const entryTime = new Date(record.entryTime);
-      return entryTime >= filterStart && entryTime <= filterEnd;
-    });
-
-    setFilteredRecords(results);
-  }, [dateFilter, vehicles]);
 
   const formatDuration = (entry, exit) => {
     const diffMs = new Date(exit) - new Date(entry);
@@ -50,19 +61,19 @@ const Reports = () => {
     }
 
     const excelData = filteredRecords.map((record) => ({
-      'Núm. Placa': record.plateNumber,
+      'Núm. Placa': record.Placa,
       Tipo:
-        record.type === 'official'
+        record.Tipo === 'Oficial'
           ? 'Oficial'
-          : record.type === 'resident'
+          : record.Tipo === 'Residente'
           ? 'Residente'
           : 'No Residente',
-      Entrada: new Date(record.entryTime).toLocaleString(),
-      Salida: record.exitTime ? new Date(record.exitTime).toLocaleString() : '-',
-      'Tiempo Estacionado': record.exitTime
-        ? formatDuration(record.entryTime, record.exitTime)
+      Entrada: new Date(record.HoraEntrada).toLocaleString(),
+      Salida: record.HoraSalida ? new Date(record.HoraSalida).toLocaleString() : '-',
+      'Tiempo Estacionado': record.HoraSalida
+        ? formatDuration(record.HoraEntrada, record.HoraSalida)
         : '-',
-      'Cantidad a Pagar': record.fee ? `$${record.fee.toFixed(2)} MXN` : '-',
+      'Cantidad a Pagar': record.Tarifa ? `$${record.Tarifa.toFixed(2)} MXN` : '-',
     }));
 
     const ws = XLSX.utils.json_to_sheet(excelData);
@@ -148,20 +159,16 @@ const Reports = () => {
               ) : (
                 filteredRecords.map((record, index) => (
                   <tr key={index}>
-                    <td>{record.plateNumber}</td>
+                    <td>{record.Placa}</td>
+                    <td>{record.Tipo}</td>
+                    <td>{new Date(record.HoraEntrada).toLocaleString()}</td>
+                    <td>{record.HoraSalida ? new Date(record.HoraSalida).toLocaleString() : '-'}</td>
                     <td>
-                      {record.type === 'official' && 'Oficial'}
-                      {record.type === 'resident' && 'Residente'}
-                      {record.type === 'noResident' && 'No Residente'}
-                    </td>
-                    <td>{new Date(record.entryTime).toLocaleString()}</td>
-                    <td>{record.exitTime ? new Date(record.exitTime).toLocaleString() : '-'}</td>
-                    <td>
-                      {record.exitTime
-                        ? formatDuration(record.entryTime, record.exitTime)
+                      {record.HoraSalida
+                        ? formatDuration(record.HoraEntrada, record.HoraSalida)
                         : '-'}
                     </td>
-                    <td>{record.fee ? `$${record.fee.toFixed(2)} MXN` : '-'}</td>
+                    <td>{record.Tarifa ? `$${record.Tarifa.toFixed(2)} MXN` : '-'}</td>
                   </tr>
                 ))
               )}
