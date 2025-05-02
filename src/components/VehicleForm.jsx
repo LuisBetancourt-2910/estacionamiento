@@ -1,64 +1,88 @@
 import React, { useState } from 'react';
 import '../styles/VehicleForm.css';
 
-const VehicleForm = ({ onSubmit, formType }) => {
-  const [vehicle, setVehicle] = useState({
+const VehicleForm = ({ onSubmit, formType, vehicleTypes = [] }) => {
+  const [formData, setFormData] = useState({
     plateNumber: '',
-    type: 'No Residente' 
+    type: '',
+    tarifa: 0,
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setVehicle(prev => ({ ...prev, [name]: value }));
+
+    if (name === 'type') {
+      // Buscar la tarifa correspondiente al tipo de vehículo seleccionado
+      const selectedType = vehicleTypes.find((type) => type.Tipo === value);
+      setFormData({
+        ...formData,
+        type: value,
+        tarifa: selectedType ? selectedType.Tarifa : 0,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({
-      ...vehicle,
-      entryTime: formType === 'entry' ? new Date() : null,
-      exitTime: formType === 'exit' ? new Date() : null
+    onSubmit(formData);
+    setFormData({
+      plateNumber: '',
+      type: '',
+      tarifa: 0,
     });
-    setVehicle({ plateNumber: '', type: 'No Residente' });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="vehicle-form">
+    <form className="vehicle-form" onSubmit={handleSubmit}>
       <div className="form-group">
         <label htmlFor="plateNumber">Número de Placa</label>
         <input
+          type="text"
           id="plateNumber"
           name="plateNumber"
-          type="text"
-          placeholder="Ej: ABC1234"
-          value={vehicle.plateNumber}
+          value={formData.plateNumber}
           onChange={handleChange}
           required
         />
       </div>
 
+      {/* Mostrar el campo de tipo de vehículo solo si el formulario es para entrada */}
       {formType === 'entry' && (
         <div className="form-group">
           <label htmlFor="type">Tipo de Vehículo</label>
           <select
             id="type"
             name="type"
-            value={vehicle.type}
+            value={formData.type}
             onChange={handleChange}
             required
           >
-            <option value="Oficial">Oficial</option>
-            <option value="Residente">Residente</option>
-            <option value="No Residente">No Residente</option>
+            <option value="">Seleccione un tipo</option>
+            {Array.isArray(vehicleTypes) && vehicleTypes.map((type) => (
+              <option key={type.Tipo} value={type.Tipo}>
+                {type.Tipo} - ${type.Tarifa.toFixed(2)} MXN/min
+              </option>
+            ))}
           </select>
         </div>
       )}
 
-      <div className="form-actions">
-        <button type="submit">
-          {formType === 'entry' ? 'Registrar Entrada' : 'Registrar Salida'}
-        </button>
-      </div>
+      {/* Mostrar la tarifa seleccionada solo si el formulario es para entrada */}
+      {formType === 'entry' && formData.tarifa > 0 && (
+        <div className="form-group">
+          <label>Tarifa Seleccionada</label>
+          <p>${formData.tarifa.toFixed(2)} MXN/min</p>
+        </div>
+      )}
+
+      <button type="submit" className="submit-button">
+        {formType === 'entry' ? 'Registrar Entrada' : 'Registrar Salida'}
+      </button>
     </form>
   );
 };

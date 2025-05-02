@@ -1,10 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import VehicleForm from '../components/VehicleForm';
 import { registrarEntrada } from '../services/registroService';
+import { obtenerTarifas } from '../services/tarifaService';
 import '../styles/VehicleEntry.css';
 
 const VehicleEntry = () => {
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+  const [vehicleTypes, setVehicleTypes] = useState([]); // Tipos de vehículos y tarifas
+
+  // Cargar tipos de vehículos y tarifas desde el backend
+  useEffect(() => {
+    const fetchVehicleTypes = async () => {
+      try {
+        const tarifas = await obtenerTarifas();
+        setVehicleTypes(tarifas);
+      } catch (error) {
+        console.error('Error al cargar los tipos de vehículos:', error);
+        alert('No se pudieron cargar los tipos de vehículos. Intenta nuevamente.');
+      }
+    };
+
+    fetchVehicleTypes();
+  }, []);
 
   const handleVehicleEntry = async (vehicle) => {
     try {
@@ -41,19 +58,24 @@ const VehicleEntry = () => {
 
       <div className="entry-grid">
         <div>
-          <VehicleForm onSubmit={handleVehicleEntry} formType="entry" />
+          <VehicleForm
+            onSubmit={handleVehicleEntry}
+            formType="entry"
+            vehicleTypes={vehicleTypes} // Pasar los tipos de vehículos al formulario
+          />
         </div>
         <div className="entry-instructions">
           <h3>Instrucciones</h3>
           <ul>
             <li>Ingrese el número de placa del vehículo.</li>
-            <li>Seleccione el tipo de vehículo:
-              <ul>
-                <li><strong>Oficial:</strong> No paga tarifa</li>
-                <li><strong>Residente:</strong> $1.00 MXN/min</li>
-                <li><strong>No Residente:</strong> $3.00 MXN/min</li>
-              </ul>
-            </li>
+            <li>Seleccione el tipo de vehículo:</li>
+            <ul>
+              {vehicleTypes.map((type) => (
+                <li key={type.Tipo}>
+                  <strong>{type.Tipo}:</strong> ${type.Tarifa.toFixed(2)} MXN/min
+                </li>
+              ))}
+            </ul>
             <li>Haga clic en "Registrar Entrada".</li>
           </ul>
         </div>
