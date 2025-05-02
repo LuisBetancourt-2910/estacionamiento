@@ -1,6 +1,7 @@
 import { sql, getPool } from '../db/connection.js';
 import jwt from 'jsonwebtoken';
 
+// Registrar nuevo usuario
 export const registrarUsuario = async (req, res) => {
   const { username, password } = req.body;
 
@@ -9,18 +10,17 @@ export const registrarUsuario = async (req, res) => {
   }
 
   try {
-    // Obtener la conexión al pool
     const pool = await getPool();
-    
+
     // Verificar si el usuario ya existe
     const userCheck = await pool.request()
       .input('username', sql.NVarChar, username)
       .query('SELECT * FROM Usuarios WHERE username = @username');
-    
+
     if (userCheck.recordset.length > 0) {
       return res.status(400).json({ error: 'El nombre de usuario ya existe' });
     }
-    
+
     // Insertar el nuevo usuario
     await pool.request()
       .input('username', sql.NVarChar, username)
@@ -34,6 +34,7 @@ export const registrarUsuario = async (req, res) => {
   }
 };
 
+// Login de usuario
 export const loginUsuario = async (req, res) => {
   const { username, password } = req.body;
 
@@ -42,7 +43,6 @@ export const loginUsuario = async (req, res) => {
   }
 
   try {
-    // Obtener la conexión al pool
     const pool = await getPool();
 
     const result = await pool.request()
@@ -55,18 +55,17 @@ export const loginUsuario = async (req, res) => {
       return res.status(401).json({ error: 'Usuario no encontrado' });
     }
 
-    // Comparación directa 
     if (user.password !== password) {
       return res.status(401).json({ error: 'Contraseña incorrecta' });
     }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username }, 
-      'esteeselsecretosecretosomassecretodetodoslossecretosjajajaaversifunciona', 
+      { id: user.id, username: user.username },
+      'esteeselsecretosecretosomassecretodetodoslossecretosjajajaaversifunciona',
       { expiresIn: '1h' }
     );
-    
-    res.json({ 
+
+    res.json({
       token,
       username: user.username,
       message: 'Inicio de sesión exitoso'
@@ -76,3 +75,16 @@ export const loginUsuario = async (req, res) => {
     res.status(500).json({ error: 'Error en el servidor durante el login' });
   }
 };
+
+// Obtener lista de usuarios
+export const obtenerUsuarios = async (req, res) => {
+  try {
+    const pool = await getPool();
+    const result = await pool.request().query('SELECT username FROM Usuarios');
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error('Error al obtener los usuarios:', error);
+    res.status(500).json({ error: 'Error al obtener los usuarios' });
+  }
+};
+

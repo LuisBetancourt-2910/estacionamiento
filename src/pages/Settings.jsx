@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaSave, FaCog, FaPlus, FaTrash } from 'react-icons/fa';
 import '../styles/Settings.css';
 import { obtenerTarifas, guardarTarifa, eliminarTarifa } from '../services/tarifaService';
-import { registrarUsuario } from '../services/usuarioService';
+import { registrarUsuario, obtenerUsuarios } from '../services/usuarioService';
 
 const Settings = () => {
   const [settings, setSettings] = useState({
@@ -70,6 +70,21 @@ const Settings = () => {
     }
   };
 
+  //obtiene los usuarios al cargar el componente
+  useEffect(() => {
+    const fetchUsuarios = async () => {
+      try {
+        const usuarios = await obtenerUsuarios();
+        setUsers(usuarios);
+      } catch (error) {
+        console.error('Error al cargar los usuarios:', error);
+        alert('No se pudieron cargar los usuarios. Intenta nuevamente.');
+      }
+    };
+  
+    fetchUsuarios();
+  }, []);
+  
   // Agregar un nuevo tipo de vehículo
   const handleAddVehicleType = async () => {
     if (!newVehicleType.trim()) {
@@ -151,7 +166,9 @@ const Settings = () => {
     try {
       await registrarUsuario(newUser);
       alert('Usuario registrado correctamente.');
-      setUsers((prev) => [...prev, { ...newUser }]);
+      const updatedUsers = await obtenerUsuarios();
+      setUsers(updatedUsers);
+      
       setNewUser({ username: '', password: '' });
     } catch (error) {
       console.error('Error al registrar el usuario:', error);
