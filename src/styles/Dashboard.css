@@ -190,3 +190,10 @@
     font-size: 0.875rem;
     color: #6b7280;
   }
+
+.fill-blue    { background-color: #3B82F6; }
+.fill-green   { background-color: #10B981; }
+.fill-purple  { background-color: #8B5CF6; }
+.fill-red     { background-color: #EF4444; }
+.fill-yellow  { background-color: #FBBF24; }
+.fill-pink    { background-color: #EC4899; }
